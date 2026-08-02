@@ -26,6 +26,7 @@ There is no test suite, linter, or build process in this repo.
 - `src/routes/boardgames.routes.js` — mounted at `/api/boardgames`. The whole router runs behind `requireAuth` (`router.use(requireAuth)`) — every boardgame endpoint requires a logged-in user.
 - `src/controllers/auth.controller.js` — register/login/logout/me/updateProfile. Never returns `passwordHash` to the client (`toPublicUser`).
 - `src/controllers/boardgames.controller.js` — request/response handling and input validation; always scopes reads/writes to `req.user.id`.
+- `src/controllers/boardgameLinks.controller.js` — CRUD for a boardgame's documents (manual, expansions...). Every handler first calls `boardgamesRepository.findByIdForUser(gameId, req.user.id)` and `404`s if that fails, before touching `boardgameLinksRepository` — links are a nested resource, so ownership is always checked through the parent game, never by trusting `gameId` alone.
 - `src/middleware/requireAuth.js` — reads the `sid` cookie, resolves it to a session then a user via the repositories below, and sets `req.user`; responds `401` otherwise.
 - `src/middleware/cookies.js` — minimal hand-rolled `Cookie` header parser (no `cookie-parser` dependency) populating `req.cookies`.
 - `src/middleware/rateLimit.js` — minimal hand-rolled fixed-window rate limiter (no `express-rate-limit` dependency), keyed by `${route}:${req.ip}` in an in-memory `Map` with a periodic sweep. Applied to `/api/auth/register` (5/hour) and `/api/auth/login` (10/15min) in `auth.routes.js`. Relies on `app.set('trust proxy', 1)` in `app.js` for `req.ip` to reflect the real client behind a reverse proxy — without it, every request behind the same proxy shares one bucket.
@@ -37,7 +38,8 @@ There is no test suite, linter, or build process in this repo.
 - `src/data/usersRepository.js` — `users` table (id, name, email UNIQUE, passwordHash, createdAt).
 - `src/data/sessionsRepository.js` — `sessions` table (token, userId, createdAt, expiresAt). Sessions last 30 days (`SESSION_TTL_MS`); `findValid` lazily deletes expired rows. `removeAllForUser(userId)` is used by password reset to log out every existing session once the password changes.
 - `src/data/passwordResetsRepository.js` — `password_resets` table (token, userId, createdAt, expiresAt), same shape/pattern as sessions but with a 1-hour TTL (`RESET_TTL_MS`).
-- `src/data/boardgamesRepository.js` — `boardgames` table, scoped by `userId` on every read/write (`readAllByUser`, `randomOneByUser`, `update(id, userId, fields)`, `remove(id, userId)`).
+- `src/data/boardgamesRepository.js` — `boardgames` table, scoped by `userId` on every read/write (`readAllByUser`, `findByIdForUser`, `randomOneByUser`, `update(id, userId, fields)`, `remove(id, userId)`). `readAllByUser` and `randomOneByUser` both attach each game's `links` array (batched via `boardgameLinksRepository.listByBoardgameIds`, not one query per game). `remove` also deletes the game's rows in `boardgame_links` — there's no `ON DELETE CASCADE` (no FK constraints are declared anywhere in this schema), so any new child table of `boardgames` needs the same manual cleanup in `remove`.
+- `src/data/boardgameLinksRepository.js` — `boardgame_links` table (id, boardgameId, label, url, createdAt): a game's documents (rules PDF, expansions...). Deliberately a separate table rather than a column, since a game can have any number of them.
 - `data/boardgames.db` — the local SQLite/libSQL datastore file, used only when `TURSO_DATABASE_URL` is unset. Not committed to git (see `.gitignore`) — it holds real account data once you register a user.
 - `.env` (not committed) / `.env.example` (committed, empty template) — `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`. Loaded via Node's built-in `process.loadEnvFile()` in `server.js` (no `dotenv` dependency); silently skipped if no `.env` file exists, which is the normal case in local dev.
 
@@ -64,6 +66,7 @@ When adding a boardgame endpoint: add a repository function if new data access i
 - `js/spine.js` — deterministic category → color-index hash used for the game-card spine color.
 - `js/toast.js` — toast notifications.
 - `js/main.js` — orchestration only: view switching (`showAuthView`/`showAppView`), tab switching, event wiring, calling `api`, passing results to `render`. `handleAuthError(err)` is the shared 401 handler — call it in every `catch` for an authenticated request so an expired session bounces the user back to `#authView` instead of failing silently. `switchAuthMode('login' | 'register' | 'forgot')` toggles between the three `.auth-form`s via the `.is-active` class (not `hidden` — see the CSS gotcha above). The "Cadastrar" tab doubles as the edit form: `editingGameId` (module-level state) tracks whether `registerForm` is in create or edit mode; `enterEditMode(game)`/`exitEditMode()` toggle the panel title, submit button label, and the "Cancelar edição" link, and `handleRegisterSubmit` branches between `api.create`/`api.update` based on it. Switching to any other tab implicitly cancels an in-progress edit. Keep business logic out of this file — put it in `render`/`api`/a new module instead.
+  - **Documents list** uses the same "stage locally, reconcile on save" pattern as the game form itself: `currentLinks` (module state, `{ key, id, label, url }[]`) is what the UI renders and edits — `key` is a client-generated `crypto.randomUUID()` so unsaved rows (`id: null`) can still be added/removed before the game is even saved. `originalLinkIds` snapshots which link ids existed when entering edit mode. On submit, `reconcileLinks(gameId)` diffs `currentLinks` against that snapshot: anything without an `id` gets `api.createLink`'d, anything from the snapshot no longer present gets `api.removeLink`'d. This only runs *after* the game itself is created/updated (a new game has no id to attach links to until then).
 
 ### API surface
 
@@ -82,12 +85,17 @@ When adding a boardgame endpoint: add a repository function if new data access i
 - `PUT /:id` — update a game's fields (same body shape as `POST`; only if it belongs to the current user, `404` otherwise). `id`, `userId`, `createdAt` are immutable.
 - `DELETE /:id` — remove a game (only if it belongs to the current user)
 - `GET /random` — return one random game owned by the current user (404 if they have none)
+- `GET /:gameId/links` — list a game's documents
+- `POST /:gameId/links` — add a document `{ label, url }` (`url` must match `/^https?:\/\//i`)
+- `DELETE /:gameId/links/:linkId` — remove a document
 
 ### Data model
 
 **User**: `id` (UUID), `name`, `email` (unique, lowercased), `passwordHash` (`scrypt salt:hash`, never sent to the client), `createdAt`.
 
-**Boardgame**: `id, userId, name, minPlayers, maxPlayers, duration, category, imageUrl, minAge, createdAt` — all optional fields besides `name`, `userId` and `createdAt` are stored as `TEXT` columns, exactly as submitted (possibly `NULL`), not coerced to numbers server-side. `readAllByUser` orders by `createdAt ASC`; `randomOneByUser` uses `ORDER BY RANDOM() LIMIT 1`.
+**Boardgame**: `id, userId, name, minPlayers, maxPlayers, duration, category, imageUrl, minAge, createdAt` — all optional fields besides `name`, `userId` and `createdAt` are stored as `TEXT` columns, exactly as submitted (possibly `NULL`), not coerced to numbers server-side. `readAllByUser` orders by `createdAt ASC`; `randomOneByUser` uses `ORDER BY RANDOM() LIMIT 1`. Both responses include a `links` array (see below).
+
+**Boardgame link/document**: `id, boardgameId, label, url, createdAt` — e.g. `{ label: "Regras base", url: "https://..." }`. A game can have any number; there's no "primary manual" field.
 
 ## Design system
 
@@ -97,6 +105,7 @@ Tabletop/felt-table visual identity, tokenized in `public/css/tokens.css`:
 - **Type**: `--font-display` (Fraunces) for headings/titles, `--font-body` (Inter) for UI copy, `--font-mono` (IBM Plex Mono) for stats/numbers — keep that role split when adding UI.
 - **Signature element**: the "Sortear" tab draws a game via a flip-style die animation (`dice.js`) that resolves into a perforated raffle-ticket card (`.ticket` in `styles.css`) — this only appears once, on the felt background (not nested inside a cream `.panel`), so its punched-hole notches (`.ticket__perf::before/::after`, colored `var(--felt)`) blend correctly. If you rewrap `#drawStage` inside a `.panel`, update the notch color to match or the illusion breaks.
 - **Auth screen**: reuses `.panel` (cream card) with an `.auth-toggle` pill switcher between the login and signup `.auth-form`s — same visual language as the tab system, not a separate style.
+- **Documents**: `.doc-chip` (small teal pill, `--font-mono`, document icon) is how a game's links surface passively on the game-card and the draw ticket — read-only, opens in a new tab. `.link-row` (in the register/edit form) is the editable counterpart, cream-soft background with a label, an "Abrir ↗" link, and a remove button — deliberately a different, heavier treatment since it's an editing control, not just a display.
 
 ### Conventions to preserve
 

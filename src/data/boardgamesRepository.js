@@ -1,11 +1,29 @@
 const db = require('./db');
+const linksRepository = require('./boardgameLinksRepository');
 
 async function readAllByUser(userId) {
   const result = await db.execute({
     sql: 'SELECT * FROM boardgames WHERE userId = ? ORDER BY createdAt ASC',
     args: [userId]
   });
-  return result.rows;
+  const games = result.rows;
+
+  const links = await linksRepository.listByBoardgameIds(games.map(g => g.id));
+  const linksByGame = new Map();
+  for (const link of links) {
+    if (!linksByGame.has(link.boardgameId)) linksByGame.set(link.boardgameId, []);
+    linksByGame.get(link.boardgameId).push(link);
+  }
+
+  return games.map(g => ({ ...g, links: linksByGame.get(g.id) || [] }));
+}
+
+async function findByIdForUser(id, userId) {
+  const result = await db.execute({
+    sql: 'SELECT * FROM boardgames WHERE id = ? AND userId = ?',
+    args: [id, userId]
+  });
+  return result.rows[0] || null;
 }
 
 async function create(game) {
@@ -61,7 +79,10 @@ async function remove(id, userId) {
     sql: 'DELETE FROM boardgames WHERE id = ? AND userId = ?',
     args: [id, userId]
   });
-  return result.rowsAffected > 0;
+  if (result.rowsAffected === 0) return false;
+
+  await db.execute({ sql: 'DELETE FROM boardgame_links WHERE boardgameId = ?', args: [id] });
+  return true;
 }
 
 async function randomOneByUser(userId) {
@@ -69,7 +90,11 @@ async function randomOneByUser(userId) {
     sql: 'SELECT * FROM boardgames WHERE userId = ? ORDER BY RANDOM() LIMIT 1',
     args: [userId]
   });
-  return result.rows[0] || null;
+  const game = result.rows[0];
+  if (!game) return null;
+
+  const links = await linksRepository.listByBoardgame(game.id);
+  return { ...game, links };
 }
 
-module.exports = { readAllByUser, create, update, remove, randomOneByUser };
+module.exports = { readAllByUser, findByIdForUser, create, update, remove, randomOneByUser };

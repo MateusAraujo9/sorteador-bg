@@ -1,10 +1,12 @@
 import { api } from './api.js';
 import { showToast } from './toast.js';
-import { renderGameList, renderStats, renderTicket } from './render.js';
+import { renderGameList, renderStats, renderTicket, renderLinksList } from './render.js';
 import { rollDie } from './dice.js';
 
 let currentUser = null;
 let editingGameId = null;
+let currentLinks = [];
+let originalLinkIds = [];
 
 function handleAuthError(err) {
   if (err && err.status === 401) {
@@ -64,6 +66,48 @@ function switchTab(tab) {
   if (tab === 'profile' && currentUser) fillProfileForm(currentUser);
 }
 
+function renderCurrentLinks() {
+  renderLinksList(document.getElementById('linksList'), currentLinks, handleRemoveLink);
+}
+
+function handleAddLink() {
+  const labelInput = document.getElementById('linkLabelInput');
+  const urlInput = document.getElementById('linkUrlInput');
+  const label = labelInput.value.trim();
+  const url = urlInput.value.trim();
+
+  if (!label) {
+    showToast('Dê um nome para o documento.', 'error');
+    return;
+  }
+  if (!/^https?:\/\/.+/i.test(url)) {
+    showToast('Informe um link válido (começando com http:// ou https://).', 'error');
+    return;
+  }
+
+  currentLinks.push({ key: crypto.randomUUID(), id: null, label, url });
+  labelInput.value = '';
+  urlInput.value = '';
+  labelInput.focus();
+  renderCurrentLinks();
+}
+
+function handleRemoveLink(key) {
+  currentLinks = currentLinks.filter(l => l.key !== key);
+  renderCurrentLinks();
+}
+
+async function reconcileLinks(gameId) {
+  const toCreate = currentLinks.filter(l => !l.id);
+  const keptIds = currentLinks.filter(l => l.id).map(l => l.id);
+  const toDelete = originalLinkIds.filter(id => !keptIds.includes(id));
+
+  await Promise.all([
+    ...toCreate.map(l => api.createLink(gameId, { label: l.label, url: l.url })),
+    ...toDelete.map(id => api.removeLink(gameId, id))
+  ]);
+}
+
 function enterEditMode(game) {
   editingGameId = game.id;
 
@@ -76,6 +120,10 @@ function enterEditMode(game) {
   form.imageUrl.value = game.imageUrl || '';
   form.minAge.value = game.minAge || '';
 
+  currentLinks = (game.links || []).map(l => ({ key: l.id, id: l.id, label: l.label, url: l.url }));
+  originalLinkIds = currentLinks.map(l => l.id);
+  renderCurrentLinks();
+
   document.getElementById('registerPanelTitle').textContent = 'Editar boardgame';
   document.getElementById('registerSubmitBtn').textContent = 'Salvar alterações';
   document.getElementById('cancelEditBtn').hidden = false;
@@ -85,6 +133,9 @@ function enterEditMode(game) {
 
 function exitEditMode() {
   editingGameId = null;
+  currentLinks = [];
+  originalLinkIds = [];
+  renderCurrentLinks();
   document.getElementById('registerPanelTitle').textContent = 'Cadastrar boardgame';
   document.getElementById('registerSubmitBtn').textContent = 'Cadastrar boardgame';
   document.getElementById('cancelEditBtn').hidden = true;
@@ -124,7 +175,7 @@ async function handleDelete(id, name) {
   }
 }
 
-function handleRegisterSubmit(event) {
+async function handleRegisterSubmit(event) {
   event.preventDefault();
   const form = event.target;
 
@@ -144,21 +195,20 @@ function handleRegisterSubmit(event) {
   }
 
   const isEditing = Boolean(editingGameId);
-  const request = isEditing ? api.update(editingGameId, payload) : api.create(payload);
 
-  request
-    .then(() => {
-      showToast(
-        isEditing ? `"${payload.name}" foi atualizado.` : `"${payload.name}" entrou na coleção.`,
-        'success'
-      );
-      exitEditMode();
-    })
-    .catch(err => {
-      if (!handleAuthError(err)) {
-        showToast(err.message || 'Não foi possível salvar o jogo.', 'error');
-      }
-    });
+  try {
+    const game = isEditing ? await api.update(editingGameId, payload) : await api.create(payload);
+    await reconcileLinks(game.id);
+    showToast(
+      isEditing ? `"${payload.name}" foi atualizado.` : `"${payload.name}" entrou na coleção.`,
+      'success'
+    );
+    exitEditMode();
+  } catch (err) {
+    if (!handleAuthError(err)) {
+      showToast(err.message || 'Não foi possível salvar o jogo.', 'error');
+    }
+  }
 }
 
 async function handleDraw() {
@@ -306,6 +356,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
   document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+  document.getElementById('addLinkBtn').addEventListener('click', handleAddLink);
+  ['linkLabelInput', 'linkUrlInput'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleAddLink();
+      }
+    });
+  });
+  renderCurrentLinks();
   document.getElementById('profileForm').addEventListener('submit', handleProfileSubmit);
   document.getElementById('drawTrigger').addEventListener('click', handleDraw);
 

@@ -34,6 +34,9 @@ export const api = {
   remove: id => request(`/boardgames/${id}`, { method: 'DELETE' }),
   drawRandom: () => request('/boardgames/random'),
 
+  createLink: (gameId, link) => request(`/boardgames/${gameId}/links`, { method: 'POST', ...jsonBody(link) }),
+  removeLink: (gameId, linkId) => request(`/boardgames/${gameId}/links/${linkId}`, { method: 'DELETE' }),
+
   auth: {
     me: () => request('/auth/me'),
     register: data => request('/auth/register', { method: 'POST', ...jsonBody(data) }),

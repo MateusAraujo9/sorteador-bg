@@ -13,5 +13,7 @@ export const icons = {
 
   trash: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4.5 7h15" ${stroke}/><path d="M9.5 7V4.5h5V7" ${stroke}/><path d="M6.5 7l1 12.5h9l1-12.5" ${stroke}/></svg>`,
 
-  edit: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 20l.9-4L16 4.9a1.5 1.5 0 012.1 0l1 1a1.5 1.5 0 010 2.1L8 19l-4 1z" ${stroke}/><path d="M14 6.9L17.1 10" ${stroke}/></svg>`
+  edit: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 20l.9-4L16 4.9a1.5 1.5 0 012.1 0l1 1a1.5 1.5 0 010 2.1L8 19l-4 1z" ${stroke}/><path d="M14 6.9L17.1 10" ${stroke}/></svg>`,
+
+  document: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M7 3.5h7l4 4V20a.6.6 0 01-.6.6H7a.6.6 0 01-.6-.6V4.1a.6.6 0 01.6-.6z" ${stroke}/><path d="M14 3.5V8h4" ${stroke}/><path d="M9 12.5h6M9 16h6" ${stroke}/></svg>`
 };

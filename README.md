@@ -5,7 +5,7 @@ Cadastre sua coleção de jogos de tabuleiro e deixe a sorte escolher o próximo
 ## Funcionalidades
 
 - **Conta** — crie uma conta ou entre com e-mail e senha; cada usuário só vê e sorteia os próprios jogos. Esqueceu a senha? Tem recuperação por e-mail.
-- **Cadastrar** — registre jogos com nome, número de jogadores, duração, categoria, idade mínima e imagem.
+- **Cadastrar** — registre jogos com nome, número de jogadores, duração, categoria, idade mínima, imagem e documentos (manual, expansões...).
 - **Coleção** — veja todos os jogos cadastrados, com estatísticas (total, categorias, duração média), edição e remoção individual.
 - **Sortear** — role os dados e receba um bilhete de sorteio com o jogo escolhido aleatoriamente.
 - **Perfil** — edite nome, e-mail e senha da conta logada.
@@ -61,7 +61,7 @@ Todas as rotas de `/api/boardgames` exigem estar autenticado (cookie de sessão 
 | POST   | `/api/auth/login`        | Autentica e inicia a sessão                     |
 | POST   | `/api/auth/logout`       | Encerra a sessão                                |
 | GET    | `/api/auth/me`           | Dados do usuário logado                         |
-| PATCH  | `/api/auth/me`           | Atualiza nome/e-mail/senha do usuário logado    |
+| PATCH  | `/api/auth/me`           | Atualiza nome/senha do usuário logado (e-mail não é editável) |
 | POST   | `/api/auth/forgot-password` | Envia e-mail com link de redefinição de senha |
 | POST   | `/api/auth/reset-password`  | Define uma nova senha a partir do token do e-mail |
 | GET    | `/api/boardgames`        | Lista os jogos do usuário logado                |
@@ -69,3 +69,6 @@ Todas as rotas de `/api/boardgames` exigem estar autenticado (cookie de sessão 
 | PUT    | `/api/boardgames/:id`    | Atualiza um jogo do usuário logado              |
 | GET    | `/api/boardgames/random` | Sorteia um jogo do usuário logado               |
 | DELETE | `/api/boardgames/:id`    | Remove um jogo do usuário logado                |
+| GET    | `/api/boardgames/:id/links`        | Lista os documentos de um jogo        |
+| POST   | `/api/boardgames/:id/links`        | Adiciona um documento (`label`, `url`) |
+| DELETE | `/api/boardgames/:id/links/:linkId` | Remove um documento                   |

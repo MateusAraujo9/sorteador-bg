@@ -48,6 +48,16 @@ async function runMigrations() {
       expiresAt TEXT NOT NULL
     )
   `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS boardgame_links (
+      id TEXT PRIMARY KEY,
+      boardgameId TEXT NOT NULL,
+      label TEXT NOT NULL,
+      url TEXT NOT NULL,
+      createdAt TEXT NOT NULL
+    )
+  `);
 }
 
 module.exports = runMigrations;

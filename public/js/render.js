@@ -57,6 +57,18 @@ function gameStatsMarkup(game) {
   return items.join('');
 }
 
+function docChip(link) {
+  return `
+    <a class="doc-chip" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">
+      ${icons.document}<span>${escapeHtml(link.label)}</span>
+    </a>`;
+}
+
+function gameLinksMarkup(game) {
+  if (!game.links || game.links.length === 0) return '';
+  return `<div class="doc-chips">${game.links.map(docChip).join('')}</div>`;
+}
+
 function gameCardTemplate(game) {
   const spine = spineIndex(game.category);
   const media = game.imageUrl
@@ -70,6 +82,7 @@ function gameCardTemplate(game) {
       <div class="game-card__body">
         <h3 class="game-card__title">${escapeHtml(game.name)}</h3>
         <div class="game-card__stats">${gameStatsMarkup(game)}</div>
+        ${gameLinksMarkup(game)}
       </div>
       <div class="game-card__actions">
         <button class="icon-btn" type="button" data-edit-id="${game.id}" aria-label="Editar ${escapeHtml(game.name)}">
@@ -98,7 +111,31 @@ export function renderTicket(container, game) {
       ${media}
       <h3 class="ticket__title">${escapeHtml(game.name)}</h3>
       <div class="ticket__details">${gameStatsMarkup(game)}</div>
+      ${gameLinksMarkup(game)}
     </div>`;
 
   container.hidden = false;
+}
+
+export function renderLinksList(container, links, onRemove) {
+  if (links.length === 0) {
+    container.innerHTML = '<p class="links-empty">Nenhum documento adicionado ainda.</p>';
+    return;
+  }
+
+  container.innerHTML = links.map(link => `
+    <div class="link-row">
+      <div class="link-row__info">
+        <span class="link-row__label">${escapeHtml(link.label)}</span>
+        <a class="link-row__url" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">Abrir ↗</a>
+      </div>
+      <button type="button" class="icon-btn icon-btn--danger" data-remove-link-key="${escapeHtml(link.key)}" aria-label="Remover ${escapeHtml(link.label)}">
+        ${icons.trash}
+      </button>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('[data-remove-link-key]').forEach(btn => {
+    btn.addEventListener('click', () => onRemove(btn.dataset.removeLinkKey));
+  });
 }
