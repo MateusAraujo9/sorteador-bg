@@ -1,6 +1,8 @@
 const usersRepository = require('../data/usersRepository');
 const sessionsRepository = require('../data/sessionsRepository');
+const passwordResetsRepository = require('../data/passwordResetsRepository');
 const { hashPassword, verifyPassword } = require('../utils/password');
+const { sendPasswordResetEmail } = require('../utils/mailer');
 const asyncHandler = require('../utils/asyncHandler');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -107,4 +109,47 @@ const updateProfile = asyncHandler(async function updateProfile(req, res) {
   res.json(toPublicUser(updated));
 });
 
-module.exports = { register, login, logout, me, updateProfile };
+const GENERIC_FORGOT_MESSAGE = 'Se esse e-mail estiver cadastrado, você vai receber um link de redefinição em instantes.';
+
+const forgotPassword = asyncHandler(async function forgotPassword(req, res) {
+  const { email } = req.body;
+
+  if (!email || !EMAIL_RE.test(email.trim())) {
+    return res.status(400).json({ error: 'Informe um e-mail válido' });
+  }
+
+  const user = await usersRepository.findByEmail(email.trim().toLowerCase());
+
+  if (user) {
+    const reset = await passwordResetsRepository.create(user.id);
+    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${reset.token}`;
+    await sendPasswordResetEmail(user.email, resetUrl);
+  }
+
+  // Mesma resposta exista ou não a conta, para não revelar e-mails cadastrados.
+  res.json({ message: GENERIC_FORGOT_MESSAGE });
+});
+
+const resetPassword = asyncHandler(async function resetPassword(req, res) {
+  const { token, newPassword } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ error: 'Link inválido ou expirado' });
+  }
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres' });
+  }
+
+  const reset = await passwordResetsRepository.findValid(token);
+  if (!reset) {
+    return res.status(400).json({ error: 'Link inválido ou expirado' });
+  }
+
+  await usersRepository.updatePassword(reset.userId, hashPassword(newPassword));
+  await passwordResetsRepository.remove(token);
+  await sessionsRepository.removeAllForUser(reset.userId);
+
+  res.json({ message: 'Senha redefinida com sucesso' });
+});
+
+module.exports = { register, login, logout, me, updateProfile, forgotPassword, resetPassword };

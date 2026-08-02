@@ -39,6 +39,15 @@ async function runMigrations() {
   if (!columns.rows.some(col => col.name === 'userId')) {
     await db.execute('ALTER TABLE boardgames ADD COLUMN userId TEXT');
   }
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      token TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      expiresAt TEXT NOT NULL
+    )
+  `);
 }
 
 module.exports = runMigrations;

@@ -40,4 +40,8 @@ async function remove(token) {
   await db.execute({ sql: 'DELETE FROM sessions WHERE token = ?', args: [token] });
 }
 
-module.exports = { create, findValid, remove, SESSION_TTL_MS };
+async function removeAllForUser(userId) {
+  await db.execute({ sql: 'DELETE FROM sessions WHERE userId = ?', args: [userId] });
+}
+
+module.exports = { create, findValid, remove, removeAllForUser, SESSION_TTL_MS };

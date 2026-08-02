@@ -48,6 +48,7 @@ function switchAuthMode(mode) {
   });
   document.getElementById('loginForm').classList.toggle('is-active', mode === 'login');
   document.getElementById('signupForm').classList.toggle('is-active', mode === 'register');
+  document.getElementById('forgotForm').classList.toggle('is-active', mode === 'forgot');
 }
 
 function switchTab(tab) {
@@ -230,6 +231,20 @@ async function handleSignup(event) {
   }
 }
 
+async function handleForgotPassword(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  try {
+    const { message } = await api.auth.forgotPassword({ email: form.email.value.trim() });
+    showToast(message, 'success');
+    form.reset();
+    switchAuthMode('login');
+  } catch (err) {
+    showToast(err.message || 'Não foi possível enviar o e-mail.', 'error');
+  }
+}
+
 async function handleLogout() {
   try {
     await api.auth.logout();
@@ -286,6 +301,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
   document.getElementById('signupForm').addEventListener('submit', handleSignup);
+  document.getElementById('forgotForm').addEventListener('submit', handleForgotPassword);
+  document.getElementById('forgotPasswordLink').addEventListener('click', () => switchAuthMode('forgot'));
+  document.getElementById('backToLoginLink').addEventListener('click', () => switchAuthMode('login'));
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
   document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);

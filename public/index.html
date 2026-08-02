@@ -52,6 +52,16 @@
             <input type="password" id="loginPassword" name="password" placeholder="Sua senha" required>
           </div>
           <button type="submit" class="btn btn-primary">Entrar</button>
+          <button type="button" class="btn-link" id="forgotPasswordLink">Esqueci minha senha</button>
+        </form>
+
+        <form id="forgotForm" class="auth-form">
+          <div class="field">
+            <label for="forgotEmail">E-mail</label>
+            <input type="email" id="forgotEmail" name="email" placeholder="voce@email.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Enviar link de redefinição</button>
+          <button type="button" class="btn-link" id="backToLoginLink">Voltar para login</button>
         </form>
 
         <form id="signupForm" class="auth-form">

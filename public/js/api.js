@@ -39,6 +39,8 @@ export const api = {
     register: data => request('/auth/register', { method: 'POST', ...jsonBody(data) }),
     login: data => request('/auth/login', { method: 'POST', ...jsonBody(data) }),
     logout: () => request('/auth/logout', { method: 'POST' }),
-    updateProfile: data => request('/auth/me', { method: 'PATCH', ...jsonBody(data) })
+    updateProfile: data => request('/auth/me', { method: 'PATCH', ...jsonBody(data) }),
+    forgotPassword: data => request('/auth/forgot-password', { method: 'POST', ...jsonBody(data) }),
+    resetPassword: data => request('/auth/reset-password', { method: 'POST', ...jsonBody(data) })
   }
 };

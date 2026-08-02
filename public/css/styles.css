@@ -175,6 +175,11 @@ input:focus-visible {
   margin-top: var(--space-2);
 }
 
+.auth-form .btn-link {
+  display: block;
+  margin: var(--space-4) auto 0;
+}
+
 /* ---------- tabs ---------- */
 .tabs {
   display: flex;
