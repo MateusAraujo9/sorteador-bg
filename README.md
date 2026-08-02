@@ -30,7 +30,7 @@ npm start
 
 O servidor sobe em [http://localhost:3000](http://localhost:3000). Por padrão usa um arquivo SQLite local em `data/boardgames.db` (criado automaticamente) — não precisa de nenhuma conta ou configuração para desenvolver.
 
-Para usar um banco Turso em vez do arquivo local (necessário em hosts sem disco persistente), copie `.env.example` para `.env` e preencha `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN`. Para o e-mail de recuperação de senha funcionar, preencha também `GMAIL_USER`/`APP_PASS_GMAIL` (senha de app do Google, não a senha normal da conta — gerada em [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)).
+Para usar um banco Turso em vez do arquivo local (necessário em hosts sem disco persistente), copie `.env.example` para `.env` e preencha `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN`. Para o e-mail de recuperação de senha funcionar, preencha também `BREVO_API_KEY`/`BREVO_SENDER_EMAIL` (conta grátis em [brevo.com](https://www.brevo.com), com um remetente verificado).
 
 ## Estrutura do projeto
 
