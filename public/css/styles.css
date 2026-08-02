@@ -103,6 +103,10 @@ input:focus-visible {
   font-size: 0.9rem;
 }
 
+.user-badge[hidden] {
+  display: none;
+}
+
 .user-badge span {
   font-weight: 600;
   color: var(--card);
