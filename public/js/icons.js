@@ -11,5 +11,7 @@ export const icons = {
 
   age: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3.2l7 2.8v5.3c0 5-3.3 8.3-7 9.5-3.7-1.2-7-4.5-7-9.5V6l7-2.8z" ${stroke}/></svg>`,
 
-  trash: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4.5 7h15" ${stroke}/><path d="M9.5 7V4.5h5V7" ${stroke}/><path d="M6.5 7l1 12.5h9l1-12.5" ${stroke}/></svg>`
+  trash: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4.5 7h15" ${stroke}/><path d="M9.5 7V4.5h5V7" ${stroke}/><path d="M6.5 7l1 12.5h9l1-12.5" ${stroke}/></svg>`,
+
+  edit: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 20l.9-4L16 4.9a1.5 1.5 0 012.1 0l1 1a1.5 1.5 0 010 2.1L8 19l-4 1z" ${stroke}/><path d="M14 6.9L17.1 10" ${stroke}/></svg>`
 };

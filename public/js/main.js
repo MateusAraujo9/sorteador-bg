@@ -3,7 +3,56 @@ import { showToast } from './toast.js';
 import { renderGameList, renderStats, renderTicket } from './render.js';
 import { rollDie } from './dice.js';
 
+let currentUser = null;
+let editingGameId = null;
+
+function handleAuthError(err) {
+  if (err && err.status === 401) {
+    currentUser = null;
+    showAuthView();
+    switchAuthMode('login');
+    showToast('Sua sessão expirou. Entre novamente.', 'error');
+    return true;
+  }
+  return false;
+}
+
+function showAuthView() {
+  document.getElementById('appView').hidden = true;
+  document.getElementById('authView').hidden = false;
+  document.getElementById('userBadge').hidden = true;
+}
+
+function showAppView(user) {
+  currentUser = user;
+  document.getElementById('authView').hidden = true;
+  document.getElementById('appView').hidden = false;
+  document.getElementById('userBadge').hidden = false;
+  document.getElementById('userBadgeName').textContent = user.name;
+  fillProfileForm(user);
+  switchTab('register');
+}
+
+function fillProfileForm(user) {
+  const form = document.getElementById('profileForm');
+  form.name.value = user.name;
+  form.email.value = user.email;
+  form.currentPassword.value = '';
+  form.newPassword.value = '';
+  form.confirmPassword.value = '';
+}
+
+function switchAuthMode(mode) {
+  document.querySelectorAll('.auth-toggle__btn').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.authMode === mode);
+  });
+  document.getElementById('loginForm').classList.toggle('is-active', mode === 'login');
+  document.getElementById('signupForm').classList.toggle('is-active', mode === 'register');
+}
+
 function switchTab(tab) {
+  if (tab !== 'register' && editingGameId) exitEditMode();
+
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('is-active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('is-active'));
 
@@ -11,6 +60,34 @@ function switchTab(tab) {
   document.querySelector(`[data-tab="${tab}"]`).classList.add('is-active');
 
   if (tab === 'list') loadGames();
+  if (tab === 'profile' && currentUser) fillProfileForm(currentUser);
+}
+
+function enterEditMode(game) {
+  editingGameId = game.id;
+
+  const form = document.getElementById('registerForm');
+  form.name.value = game.name || '';
+  form.minPlayers.value = game.minPlayers || '';
+  form.maxPlayers.value = game.maxPlayers || '';
+  form.duration.value = game.duration || '';
+  form.category.value = game.category || '';
+  form.imageUrl.value = game.imageUrl || '';
+  form.minAge.value = game.minAge || '';
+
+  document.getElementById('registerPanelTitle').textContent = 'Editar boardgame';
+  document.getElementById('registerSubmitBtn').textContent = 'Salvar alterações';
+  document.getElementById('cancelEditBtn').hidden = false;
+
+  switchTab('register');
+}
+
+function exitEditMode() {
+  editingGameId = null;
+  document.getElementById('registerPanelTitle').textContent = 'Cadastrar boardgame';
+  document.getElementById('registerSubmitBtn').textContent = 'Cadastrar boardgame';
+  document.getElementById('cancelEditBtn').hidden = true;
+  document.getElementById('registerForm').reset();
 }
 
 function computeStats(games) {
@@ -27,10 +104,10 @@ async function loadGames() {
   const listEl = document.getElementById('boardgamesList');
   try {
     const games = await api.list();
-    renderGameList(listEl, games, handleDelete);
+    renderGameList(listEl, games, handleDelete, enterEditMode);
     renderStats(computeStats(games));
-  } catch {
-    showToast('Não foi possível carregar sua coleção.', 'error');
+  } catch (err) {
+    if (!handleAuthError(err)) showToast('Não foi possível carregar sua coleção.', 'error');
   }
 }
 
@@ -41,8 +118,8 @@ async function handleDelete(id, name) {
     await api.remove(id);
     showToast(`"${name}" foi removido.`, 'success');
     loadGames();
-  } catch {
-    showToast('Não foi possível remover o jogo. Tente novamente.', 'error');
+  } catch (err) {
+    if (!handleAuthError(err)) showToast('Não foi possível remover o jogo. Tente novamente.', 'error');
   }
 }
 
@@ -65,12 +142,22 @@ function handleRegisterSubmit(event) {
     return;
   }
 
-  api.create(payload)
+  const isEditing = Boolean(editingGameId);
+  const request = isEditing ? api.update(editingGameId, payload) : api.create(payload);
+
+  request
     .then(() => {
-      showToast(`"${payload.name}" entrou na coleção.`, 'success');
-      form.reset();
+      showToast(
+        isEditing ? `"${payload.name}" foi atualizado.` : `"${payload.name}" entrou na coleção.`,
+        'success'
+      );
+      exitEditMode();
     })
-    .catch(err => showToast(err.message || 'Não foi possível cadastrar o jogo.', 'error'));
+    .catch(err => {
+      if (!handleAuthError(err)) {
+        showToast(err.message || 'Não foi possível salvar o jogo.', 'error');
+      }
+    });
 }
 
 async function handleDraw() {
@@ -83,7 +170,7 @@ async function handleDraw() {
   trigger.textContent = 'Rolando...';
 
   const [result] = await Promise.all([
-    api.drawRandom().catch(err => ({ __error: err.message })),
+    api.drawRandom().catch(err => ({ __error: err })),
     rollDie(dieFace)
   ]);
 
@@ -91,12 +178,15 @@ async function handleDraw() {
 
   if (result && result.__error) {
     trigger.textContent = 'Rolar os dados';
-    showToast(
-      result.__error === 'Nenhum boardgame cadastrado para sortear'
-        ? 'Cadastre ao menos um jogo antes de rolar os dados.'
-        : result.__error,
-      'error'
-    );
+    const err = result.__error;
+    if (!handleAuthError(err)) {
+      showToast(
+        err.message === 'Nenhum boardgame cadastrado para sortear'
+          ? 'Cadastre ao menos um jogo antes de rolar os dados.'
+          : err.message,
+        'error'
+      );
+    }
     return;
   }
 
@@ -105,13 +195,107 @@ async function handleDraw() {
   stage.classList.add('has-result');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function handleLogin(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  try {
+    const user = await api.auth.login({
+      email: form.email.value.trim(),
+      password: form.password.value
+    });
+    form.reset();
+    showToast(`Bem-vindo, ${user.name}!`, 'success');
+    showAppView(user);
+  } catch (err) {
+    showToast(err.message || 'Não foi possível entrar.', 'error');
+  }
+}
+
+async function handleSignup(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  try {
+    const user = await api.auth.register({
+      name: form.name.value.trim(),
+      email: form.email.value.trim(),
+      password: form.password.value
+    });
+    form.reset();
+    showToast(`Conta criada! Bem-vindo, ${user.name}.`, 'success');
+    showAppView(user);
+  } catch (err) {
+    showToast(err.message || 'Não foi possível criar a conta.', 'error');
+  }
+}
+
+async function handleLogout() {
+  try {
+    await api.auth.logout();
+  } catch {
+    // encerra a sessão local mesmo se a chamada falhar
+  }
+  currentUser = null;
+  showToast('Você saiu da sua conta.', 'info');
+  switchAuthMode('login');
+  showAuthView();
+}
+
+async function handleProfileSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  const newPassword = form.newPassword.value;
+  const confirmPassword = form.confirmPassword.value;
+
+  if (newPassword && newPassword !== confirmPassword) {
+    showToast('A confirmação de senha não confere.', 'error');
+    return;
+  }
+
+  const payload = {
+    name: form.name.value.trim(),
+    email: form.email.value.trim()
+  };
+
+  if (newPassword) {
+    payload.currentPassword = form.currentPassword.value;
+    payload.newPassword = newPassword;
+  }
+
+  try {
+    const user = await api.auth.updateProfile(payload);
+    currentUser = user;
+    document.getElementById('userBadgeName').textContent = user.name;
+    fillProfileForm(user);
+    showToast('Perfil atualizado com sucesso.', 'success');
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível atualizar o perfil.', 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
+  document.querySelectorAll('.auth-toggle__btn').forEach(btn => {
+    btn.addEventListener('click', () => switchAuthMode(btn.dataset.authMode));
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', handleLogin);
+  document.getElementById('signupForm').addEventListener('submit', handleSignup);
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
+  document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+  document.getElementById('profileForm').addEventListener('submit', handleProfileSubmit);
   document.getElementById('drawTrigger').addEventListener('click', handleDraw);
 
-  loadGames();
+  try {
+    const user = await api.auth.me();
+    showAppView(user);
+  } catch {
+    showAuthView();
+  }
 });

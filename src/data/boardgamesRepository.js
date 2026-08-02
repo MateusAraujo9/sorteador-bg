@@ -1,16 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const { DatabaseSync } = require('node:sqlite');
-
-const DB_FILE = path.join(__dirname, '..', '..', 'data', 'boardgames.db');
-
-fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
-
-const db = new DatabaseSync(DB_FILE);
+const db = require('./db');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS boardgames (
     id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
     name TEXT NOT NULL,
     minPlayers TEXT,
     maxPlayers TEXT,
@@ -22,16 +15,22 @@ db.exec(`
   )
 `);
 
-function readAll() {
-  return db.prepare('SELECT * FROM boardgames ORDER BY createdAt ASC').all();
+const columns = db.prepare('PRAGMA table_info(boardgames)').all();
+if (!columns.some(col => col.name === 'userId')) {
+  db.exec('ALTER TABLE boardgames ADD COLUMN userId TEXT');
+}
+
+function readAllByUser(userId) {
+  return db.prepare('SELECT * FROM boardgames WHERE userId = ? ORDER BY createdAt ASC').all(userId);
 }
 
 function create(game) {
   db.prepare(`
-    INSERT INTO boardgames (id, name, minPlayers, maxPlayers, duration, category, imageUrl, minAge, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO boardgames (id, userId, name, minPlayers, maxPlayers, duration, category, imageUrl, minAge, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     game.id,
+    game.userId,
     game.name,
     game.minPlayers,
     game.maxPlayers,
@@ -44,13 +43,34 @@ function create(game) {
   return game;
 }
 
-function remove(id) {
-  const result = db.prepare('DELETE FROM boardgames WHERE id = ?').run(id);
+function update(id, userId, fields) {
+  const result = db.prepare(`
+    UPDATE boardgames
+    SET name = ?, minPlayers = ?, maxPlayers = ?, duration = ?, category = ?, imageUrl = ?, minAge = ?
+    WHERE id = ? AND userId = ?
+  `).run(
+    fields.name,
+    fields.minPlayers,
+    fields.maxPlayers,
+    fields.duration,
+    fields.category,
+    fields.imageUrl,
+    fields.minAge,
+    id,
+    userId
+  );
+
+  if (result.changes === 0) return null;
+  return db.prepare('SELECT * FROM boardgames WHERE id = ?').get(id);
+}
+
+function remove(id, userId) {
+  const result = db.prepare('DELETE FROM boardgames WHERE id = ? AND userId = ?').run(id, userId);
   return result.changes > 0;
 }
 
-function randomOne() {
-  return db.prepare('SELECT * FROM boardgames ORDER BY RANDOM() LIMIT 1').get() || null;
+function randomOneByUser(userId) {
+  return db.prepare('SELECT * FROM boardgames WHERE userId = ? ORDER BY RANDOM() LIMIT 1').get(userId) || null;
 }
 
-module.exports = { readAll, create, remove, randomOne };
+module.exports = { readAllByUser, create, update, remove, randomOneByUser };

@@ -4,14 +4,17 @@ Cadastre sua coleção de jogos de tabuleiro e deixe a sorte escolher o próximo
 
 ## Funcionalidades
 
+- **Conta** — crie uma conta ou entre com e-mail e senha; cada usuário só vê e sorteia os próprios jogos.
 - **Cadastrar** — registre jogos com nome, número de jogadores, duração, categoria, idade mínima e imagem.
-- **Coleção** — veja todos os jogos cadastrados, com estatísticas (total, categorias, duração média) e remoção individual.
+- **Coleção** — veja todos os jogos cadastrados, com estatísticas (total, categorias, duração média), edição e remoção individual.
 - **Sortear** — role os dados e receba um bilhete de sorteio com o jogo escolhido aleatoriamente.
+- **Perfil** — edite nome, e-mail e senha da conta logada.
 
 ## Stack
 
 - **Backend**: Node.js + Express, em estrutura de camadas (`routes` → `controllers` → `repository`)
 - **Persistência**: SQLite via `node:sqlite` (nativo do Node, sem dependência externa)
+- **Autenticação**: sessão por cookie `httpOnly` (sem `express-session`), senhas com hash `scrypt` nativo do Node (sem `bcrypt`)
 - **Frontend**: HTML/CSS/JS puro, sem framework ou bundler — ES modules nativos no navegador
 
 Sem build step, sem testes automatizados.
@@ -48,9 +51,17 @@ Mais detalhes de arquitetura, convenções e o sistema de design em [`CLAUDE.md`
 
 ## API
 
-| Método | Rota                     | Descrição                              |
-|--------|--------------------------|-----------------------------------------|
-| GET    | `/api/boardgames`        | Lista todos os jogos                    |
-| POST   | `/api/boardgames`        | Cadastra um jogo (`name` obrigatório)   |
-| GET    | `/api/boardgames/random` | Sorteia um jogo aleatório               |
-| DELETE | `/api/boardgames/:id`    | Remove um jogo                          |
+Todas as rotas de `/api/boardgames` exigem estar autenticado (cookie de sessão `sid`).
+
+| Método | Rota                     | Descrição                                    |
+|--------|--------------------------|------------------------------------------------|
+| POST   | `/api/auth/register`     | Cria uma conta e inicia a sessão                |
+| POST   | `/api/auth/login`        | Autentica e inicia a sessão                     |
+| POST   | `/api/auth/logout`       | Encerra a sessão                                |
+| GET    | `/api/auth/me`           | Dados do usuário logado                         |
+| PATCH  | `/api/auth/me`           | Atualiza nome/e-mail/senha do usuário logado    |
+| GET    | `/api/boardgames`        | Lista os jogos do usuário logado                |
+| POST   | `/api/boardgames`        | Cadastra um jogo (`name` obrigatório)           |
+| PUT    | `/api/boardgames/:id`    | Atualiza um jogo do usuário logado              |
+| GET    | `/api/boardgames/random` | Sorteia um jogo do usuário logado               |
+| DELETE | `/api/boardgames/:id`    | Remove um jogo do usuário logado                |

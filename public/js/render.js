@@ -22,7 +22,7 @@ export function renderEmptyState(container, { title, message }) {
     </div>`;
 }
 
-export function renderGameList(container, games, onDelete) {
+export function renderGameList(container, games, onDelete, onEdit) {
   if (games.length === 0) {
     renderEmptyState(container, {
       title: 'Sua estante está vazia.',
@@ -35,6 +35,10 @@ export function renderGameList(container, games, onDelete) {
 
   container.querySelectorAll('[data-delete-id]').forEach(btn => {
     btn.addEventListener('click', () => onDelete(btn.dataset.deleteId, btn.dataset.deleteName));
+  });
+
+  container.querySelectorAll('[data-edit-id]').forEach(btn => {
+    btn.addEventListener('click', () => onEdit(games.find(g => g.id === btn.dataset.editId)));
   });
 }
 
@@ -67,9 +71,14 @@ function gameCardTemplate(game) {
         <h3 class="game-card__title">${escapeHtml(game.name)}</h3>
         <div class="game-card__stats">${gameStatsMarkup(game)}</div>
       </div>
-      <button class="icon-btn icon-btn--danger" type="button" data-delete-id="${game.id}" data-delete-name="${escapeHtml(game.name)}" aria-label="Remover ${escapeHtml(game.name)}">
-        ${icons.trash}
-      </button>
+      <div class="game-card__actions">
+        <button class="icon-btn" type="button" data-edit-id="${game.id}" aria-label="Editar ${escapeHtml(game.name)}">
+          ${icons.edit}
+        </button>
+        <button class="icon-btn icon-btn--danger" type="button" data-delete-id="${game.id}" data-delete-name="${escapeHtml(game.name)}" aria-label="Remover ${escapeHtml(game.name)}">
+          ${icons.trash}
+        </button>
+      </div>
     </article>`;
 }
 

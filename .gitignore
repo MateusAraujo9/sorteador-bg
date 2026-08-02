@@ -1,3 +1,6 @@
 node_modules/
 Thumbs.db
 .DS_Store
+
+# banco local (contas, sessões, jogos) — tratado localmente onde o app roda
+/data/
