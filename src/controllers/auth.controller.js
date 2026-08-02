@@ -9,11 +9,11 @@ function toPublicUser(user) {
   return { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt };
 }
 
-function setSessionCookie(res, session) {
+function setSessionCookie(req, res, session) {
   res.cookie(SESSION_COOKIE, session.token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: req.secure,
     expires: new Date(session.expiresAt),
     path: '/'
   });
@@ -44,7 +44,7 @@ function register(req, res) {
   });
 
   const session = sessionsRepository.create(user.id);
-  setSessionCookie(res, session);
+  setSessionCookie(req, res, session);
   res.status(201).json(toPublicUser(user));
 }
 
@@ -61,7 +61,7 @@ function login(req, res) {
   }
 
   const session = sessionsRepository.create(user.id);
-  setSessionCookie(res, session);
+  setSessionCookie(req, res, session);
   res.json(toPublicUser(user));
 }
 

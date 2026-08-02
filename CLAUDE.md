@@ -28,6 +28,7 @@ There is no test suite, linter, or build process in this repo.
 - `src/controllers/boardgames.controller.js` — request/response handling and input validation; always scopes reads/writes to `req.user.id`.
 - `src/middleware/requireAuth.js` — reads the `sid` cookie, resolves it to a session then a user via the repositories below, and sets `req.user`; responds `401` otherwise.
 - `src/middleware/cookies.js` — minimal hand-rolled `Cookie` header parser (no `cookie-parser` dependency) populating `req.cookies`.
+- `src/middleware/rateLimit.js` — minimal hand-rolled fixed-window rate limiter (no `express-rate-limit` dependency), keyed by `${route}:${req.ip}` in an in-memory `Map` with a periodic sweep. Applied to `/api/auth/register` (5/hour) and `/api/auth/login` (10/15min) in `auth.routes.js`. Relies on `app.set('trust proxy', 1)` in `app.js` for `req.ip` to reflect the real client behind a reverse proxy — without it, every request behind the same proxy shares one bucket.
 - `src/utils/password.js` — password hashing with Node's built-in `crypto.scrypt` (salt + hash, `timingSafeEqual` compare) — no `bcrypt` dependency.
 - `src/data/db.js` — the single shared `node:sqlite` `DatabaseSync` connection (`data/boardgames.db`). Every repository requires this instead of opening its own connection.
 - `src/data/usersRepository.js` — `users` table (id, name, email UNIQUE, passwordHash, createdAt).
@@ -40,7 +41,8 @@ When adding a boardgame endpoint: add a repository function if new data access i
 
 ### Auth model
 
-- Session tokens are random 32-byte hex strings, stored server-side in the `sessions` table and set client-side as an `httpOnly`, `sameSite: lax` cookie named `sid` (see `setSessionCookie` in `auth.controller.js`). `secure` is only set when `NODE_ENV=production`.
+- Session tokens are random 32-byte hex strings, stored server-side in the `sessions` table and set client-side as an `httpOnly`, `sameSite: lax` cookie named `sid` (see `setSessionCookie` in `auth.controller.js`). `secure` is derived from `req.secure` (not `NODE_ENV`) — combined with `app.set('trust proxy', 1)` in `app.js`, this means the cookie is automatically marked `Secure` whenever the request actually arrived over HTTPS (directly or via a reverse proxy's `X-Forwarded-Proto`), and never marked `Secure` over plain HTTP (so local dev over `http://localhost` keeps working). Don't switch this back to an env-var check — it's a footgun if the var is never set in production.
+- `/api/auth/register` and `/api/auth/login` are rate-limited (see `rateLimit.js` above) against brute-force and mass account creation.
 - There is no CSRF token — this is a deliberate, proportionate call for this app's scope: `cors()` runs without `credentials: true`, so a cross-origin fetch can't carry the cookie, and `sameSite: lax` blocks it from cross-site non-GET requests too. Don't loosen the CORS config to allow credentialed cross-origin requests without adding real CSRF protection at the same time.
 - Existing boardgames created before this feature landed have `userId = NULL` (orphaned) — they won't appear for any user via `readAllByUser`. Nothing auto-assigns them; if you need to attach them to an account, do it with a one-off script/SQL against `data/boardgames.db`.
 

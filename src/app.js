@@ -8,6 +8,10 @@ const boardgamesRouter = require('./routes/boardgames.routes');
 function createApp() {
   const app = express();
 
+  // Necessário atrás de proxies TLS-terminating (Render, Fly, Railway, nginx...)
+  // para que req.secure e req.ip reflitam a conexão real do cliente.
+  app.set('trust proxy', 1);
+
   app.use(cors());
   app.use(express.json());
   app.use(parseCookies);
