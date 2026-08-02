@@ -13,7 +13,7 @@ Cadastre sua coleção de jogos de tabuleiro e deixe a sorte escolher o próximo
 ## Stack
 
 - **Backend**: Node.js + Express, em estrutura de camadas (`routes` → `controllers` → `repository`)
-- **Persistência**: SQLite via `node:sqlite` (nativo do Node, sem dependência externa)
+- **Persistência**: SQLite/libSQL via `@libsql/client` — arquivo local por padrão (zero configuração), ou [Turso](https://turso.tech) (libSQL hospedado) em produção, via variáveis de ambiente
 - **Autenticação**: sessão por cookie `httpOnly` (sem `express-session`), senhas com hash `scrypt` nativo do Node (sem `bcrypt`)
 - **Frontend**: HTML/CSS/JS puro, sem framework ou bundler — ES modules nativos no navegador
 
@@ -28,19 +28,21 @@ npm install
 npm start
 ```
 
-O servidor sobe em [http://localhost:3000](http://localhost:3000).
+O servidor sobe em [http://localhost:3000](http://localhost:3000). Por padrão usa um arquivo SQLite local em `data/boardgames.db` (criado automaticamente) — não precisa de nenhuma conta ou configuração para desenvolver.
+
+Para usar um banco Turso em vez do arquivo local (necessário em hosts sem disco persistente), copie `.env.example` para `.env` e preencha `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN`.
 
 ## Estrutura do projeto
 
 ```
-server.js                    # entry point
+server.js                    # entry point (roda as migrações e sobe o servidor)
 src/
   app.js                     # setup do Express (middlewares, rotas)
   routes/                    # mapeamento de rotas HTTP
   controllers/               # validação de entrada e resposta
-  data/                      # acesso ao banco (única camada que toca o SQLite)
+  data/                      # acesso ao banco (única camada que toca o @libsql/client)
 data/
-  boardgames.db              # banco SQLite
+  boardgames.db              # banco local (só existe quando não há TURSO_DATABASE_URL)
 public/
   index.html                 # markup
   css/                       # tokens de design + estilos

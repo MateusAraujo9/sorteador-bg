@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Sorteador de Boardgames — a Portuguese-language web app for registering board games and randomly drawing one to play. Express backend in a small layered structure, a modular vanilla-JS frontend (no framework/bundler), SQLite (via Node's built-in `node:sqlite`) as the datastore. Cookie-based session auth scopes every board game to its owning user. No build step, no tests.
+Sorteador de Boardgames — a Portuguese-language web app for registering board games and randomly drawing one to play. Express backend in a small layered structure, a modular vanilla-JS frontend (no framework/bundler), SQLite/libSQL (via `@libsql/client`) as the datastore — a local file with zero config, or Turso (hosted libSQL) in production. Cookie-based session auth scopes every board game to its owning user. No build step, no tests.
 
 ## Commands
 
@@ -30,14 +30,16 @@ There is no test suite, linter, or build process in this repo.
 - `src/middleware/cookies.js` — minimal hand-rolled `Cookie` header parser (no `cookie-parser` dependency) populating `req.cookies`.
 - `src/middleware/rateLimit.js` — minimal hand-rolled fixed-window rate limiter (no `express-rate-limit` dependency), keyed by `${route}:${req.ip}` in an in-memory `Map` with a periodic sweep. Applied to `/api/auth/register` (5/hour) and `/api/auth/login` (10/15min) in `auth.routes.js`. Relies on `app.set('trust proxy', 1)` in `app.js` for `req.ip` to reflect the real client behind a reverse proxy — without it, every request behind the same proxy shares one bucket.
 - `src/utils/password.js` — password hashing with Node's built-in `crypto.scrypt` (salt + hash, `timingSafeEqual` compare) — no `bcrypt` dependency.
-- `src/data/db.js` — the single shared `node:sqlite` `DatabaseSync` connection (`data/boardgames.db`). Every repository requires this instead of opening its own connection.
+- `src/utils/asyncHandler.js` — wraps an async Express handler so a rejected promise reaches `next(err)` instead of crashing unhandled (Express 4 doesn't do this automatically). Every controller/middleware function that awaits a repository call is wrapped in this.
+- `src/data/db.js` — the single shared `@libsql/client` connection, used by every repository. Picks its target from env vars: if `TURSO_DATABASE_URL` is set, it connects to that (Turso, with `TURSO_AUTH_TOKEN`); otherwise it falls back to a local file at `data/boardgames.db` (auto-created, zero config). **All repository calls are async** — `db.execute({ sql, args })` returns a promise resolving to `{ rows, rowsAffected, ... }`, not the synchronous `node:sqlite` shape used earlier in this project's history.
+- `src/data/migrate.js` — `runMigrations()`, the single place schema is created/evolved (all three `CREATE TABLE IF NOT EXISTS` + the `boardgames.userId` column self-migration via `PRAGMA table_info`). Called once from `server.js` before `app.listen()` — repositories themselves no longer create tables at require-time.
 - `src/data/usersRepository.js` — `users` table (id, name, email UNIQUE, passwordHash, createdAt).
 - `src/data/sessionsRepository.js` — `sessions` table (token, userId, createdAt, expiresAt). Sessions last 30 days (`SESSION_TTL_MS`); `findValid` lazily deletes expired rows.
-- `src/data/boardgamesRepository.js` — `boardgames` table, now with a `userId` column. On startup it checks `PRAGMA table_info` and runs `ALTER TABLE ... ADD COLUMN userId` if missing, so it self-migrates an older DB file in place. All reads/writes are scoped by `userId` (`readAllByUser`, `randomOneByUser`, `update(id, userId, fields)`, `remove(id, userId)`).
-- `data/boardgames.db` — the SQLite datastore file. Requires Node 22.5+ (built and tested on Node 24).
-- `data/boardgames.json.bak` — the old JSON datastore, kept only as a historical backup from before the SQLite migration; not read by the app.
+- `src/data/boardgamesRepository.js` — `boardgames` table, scoped by `userId` on every read/write (`readAllByUser`, `randomOneByUser`, `update(id, userId, fields)`, `remove(id, userId)`).
+- `data/boardgames.db` — the local SQLite/libSQL datastore file, used only when `TURSO_DATABASE_URL` is unset. Not committed to git (see `.gitignore`) — it holds real account data once you register a user.
+- `.env` (not committed) / `.env.example` (committed, empty template) — `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`. Loaded via Node's built-in `process.loadEnvFile()` in `server.js` (no `dotenv` dependency); silently skipped if no `.env` file exists, which is the normal case in local dev.
 
-When adding a boardgame endpoint: add a repository function if new data access is needed (accepting `userId`), a controller function that validates input and shapes the response, and a route that wires it up — in that order. New authenticated endpoints outside `/api/boardgames` should use the `requireAuth` middleware the same way `auth.routes.js` does for `/me`.
+When adding a boardgame endpoint: add a repository function if new data access is needed (accepting `userId`, `async`, using `db.execute`), a controller function wrapped in `asyncHandler` that validates input and shapes the response, and a route that wires it up — in that order. New authenticated endpoints outside `/api/boardgames` should use the `requireAuth` middleware the same way `auth.routes.js` does for `/me`.
 
 ### Auth model
 
@@ -93,7 +95,8 @@ Tabletop/felt-table visual identity, tokenized in `public/css/tokens.css`:
 ### Conventions to preserve
 
 - Keep the layered backend structure (routes → controllers → repository) and the modular frontend (`public/css/*`, `public/js/*`) — don't collapse back into single-file `server.js`/`index.html`, this structure exists specifically to support future features.
-- Data access goes through the repositories in `src/data/` only; controllers never touch `node:sqlite` directly. If you deploy to a platform with an ephemeral/read-only filesystem (e.g. Vercel, Netlify Functions), `data/boardgames.db` will not persist — swap the repositories for a hosted DB (e.g. Turso, which is SQLite-wire-compatible) rather than adding filesystem workarounds.
+- Data access goes through the repositories in `src/data/` only; controllers never touch `db.js`/`@libsql/client` directly. Every repository function is `async` — don't reintroduce synchronous `node:sqlite`-style calls.
+- Deploying somewhere without persistent disk (serverless/ephemeral filesystems, or a free-tier host like Render) means the local-file fallback in `db.js` won't survive a restart — set `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` in that environment so `db.js` points at Turso instead. Nothing else in the code needs to change to switch between the two.
 - Every new authenticated route must scope its data access by `req.user.id`, mirroring `boardgames.controller.js` — never trust a client-supplied user id.
 - User-facing strings and UI copy are in Portuguese (pt-BR), written in an active, direct voice (e.g. toast/error copy says what happened and what to do, not a generic "erro ao..."); match that when adding new UI text or API error messages.
 - No bundler/build step by design — frontend JS relies on native ES module `import`/`export` served as static files. If you add a module, reference it with an explicit relative path (and `.js` extension) from its importer.

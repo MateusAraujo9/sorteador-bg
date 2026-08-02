@@ -1,17 +1,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    passwordHash TEXT NOT NULL,
-    createdAt TEXT NOT NULL
-  )
-`);
-
-function create({ name, email, passwordHash }) {
+async function create({ name, email, passwordHash }) {
   const user = {
     id: crypto.randomUUID(),
     name,
@@ -20,29 +10,40 @@ function create({ name, email, passwordHash }) {
     createdAt: new Date().toISOString()
   };
 
-  db.prepare(`
-    INSERT INTO users (id, name, email, passwordHash, createdAt)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(user.id, user.name, user.email, user.passwordHash, user.createdAt);
+  await db.execute({
+    sql: `
+      INSERT INTO users (id, name, email, passwordHash, createdAt)
+      VALUES (?, ?, ?, ?, ?)
+    `,
+    args: [user.id, user.name, user.email, user.passwordHash, user.createdAt]
+  });
 
   return user;
 }
 
-function findByEmail(email) {
-  return db.prepare('SELECT * FROM users WHERE email = ?').get(email) || null;
+async function findByEmail(email) {
+  const result = await db.execute({ sql: 'SELECT * FROM users WHERE email = ?', args: [email] });
+  return result.rows[0] || null;
 }
 
-function findById(id) {
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(id) || null;
+async function findById(id) {
+  const result = await db.execute({ sql: 'SELECT * FROM users WHERE id = ?', args: [id] });
+  return result.rows[0] || null;
 }
 
-function update(id, { name, email }) {
-  db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ?').run(name, email, id);
+async function update(id, { name, email }) {
+  await db.execute({
+    sql: 'UPDATE users SET name = ?, email = ? WHERE id = ?',
+    args: [name, email, id]
+  });
   return findById(id);
 }
 
-function updatePassword(id, passwordHash) {
-  db.prepare('UPDATE users SET passwordHash = ? WHERE id = ?').run(passwordHash, id);
+async function updatePassword(id, passwordHash) {
+  await db.execute({
+    sql: 'UPDATE users SET passwordHash = ? WHERE id = ?',
+    args: [passwordHash, id]
+  });
 }
 
 module.exports = { create, findByEmail, findById, update, updatePassword };

@@ -3,16 +3,7 @@ const db = require('./db');
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
-    userId TEXT NOT NULL,
-    createdAt TEXT NOT NULL,
-    expiresAt TEXT NOT NULL
-  )
-`);
-
-function create(userId) {
+async function create(userId) {
   const now = Date.now();
   const session = {
     token: crypto.randomBytes(32).toString('hex'),
@@ -21,28 +12,32 @@ function create(userId) {
     expiresAt: new Date(now + SESSION_TTL_MS).toISOString()
   };
 
-  db.prepare(`
-    INSERT INTO sessions (token, userId, createdAt, expiresAt)
-    VALUES (?, ?, ?, ?)
-  `).run(session.token, session.userId, session.createdAt, session.expiresAt);
+  await db.execute({
+    sql: `
+      INSERT INTO sessions (token, userId, createdAt, expiresAt)
+      VALUES (?, ?, ?, ?)
+    `,
+    args: [session.token, session.userId, session.createdAt, session.expiresAt]
+  });
 
   return session;
 }
 
-function findValid(token) {
-  const session = db.prepare('SELECT * FROM sessions WHERE token = ?').get(token);
+async function findValid(token) {
+  const result = await db.execute({ sql: 'SELECT * FROM sessions WHERE token = ?', args: [token] });
+  const session = result.rows[0];
   if (!session) return null;
 
   if (new Date(session.expiresAt).getTime() < Date.now()) {
-    remove(token);
+    await remove(token);
     return null;
   }
 
   return session;
 }
 
-function remove(token) {
-  db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
+async function remove(token) {
+  await db.execute({ sql: 'DELETE FROM sessions WHERE token = ?', args: [token] });
 }
 
 module.exports = { create, findValid, remove, SESSION_TTL_MS };

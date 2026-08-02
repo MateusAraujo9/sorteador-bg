@@ -1,76 +1,75 @@
 const db = require('./db');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS boardgames (
-    id TEXT PRIMARY KEY,
-    userId TEXT NOT NULL,
-    name TEXT NOT NULL,
-    minPlayers TEXT,
-    maxPlayers TEXT,
-    duration TEXT,
-    category TEXT,
-    imageUrl TEXT,
-    minAge TEXT,
-    createdAt TEXT NOT NULL
-  )
-`);
-
-const columns = db.prepare('PRAGMA table_info(boardgames)').all();
-if (!columns.some(col => col.name === 'userId')) {
-  db.exec('ALTER TABLE boardgames ADD COLUMN userId TEXT');
+async function readAllByUser(userId) {
+  const result = await db.execute({
+    sql: 'SELECT * FROM boardgames WHERE userId = ? ORDER BY createdAt ASC',
+    args: [userId]
+  });
+  return result.rows;
 }
 
-function readAllByUser(userId) {
-  return db.prepare('SELECT * FROM boardgames WHERE userId = ? ORDER BY createdAt ASC').all(userId);
-}
-
-function create(game) {
-  db.prepare(`
-    INSERT INTO boardgames (id, userId, name, minPlayers, maxPlayers, duration, category, imageUrl, minAge, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    game.id,
-    game.userId,
-    game.name,
-    game.minPlayers,
-    game.maxPlayers,
-    game.duration,
-    game.category,
-    game.imageUrl,
-    game.minAge,
-    game.createdAt
-  );
+async function create(game) {
+  await db.execute({
+    sql: `
+      INSERT INTO boardgames (id, userId, name, minPlayers, maxPlayers, duration, category, imageUrl, minAge, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      game.id,
+      game.userId,
+      game.name,
+      game.minPlayers,
+      game.maxPlayers,
+      game.duration,
+      game.category,
+      game.imageUrl,
+      game.minAge,
+      game.createdAt
+    ]
+  });
   return game;
 }
 
-function update(id, userId, fields) {
-  const result = db.prepare(`
-    UPDATE boardgames
-    SET name = ?, minPlayers = ?, maxPlayers = ?, duration = ?, category = ?, imageUrl = ?, minAge = ?
-    WHERE id = ? AND userId = ?
-  `).run(
-    fields.name,
-    fields.minPlayers,
-    fields.maxPlayers,
-    fields.duration,
-    fields.category,
-    fields.imageUrl,
-    fields.minAge,
-    id,
-    userId
-  );
+async function update(id, userId, fields) {
+  const result = await db.execute({
+    sql: `
+      UPDATE boardgames
+      SET name = ?, minPlayers = ?, maxPlayers = ?, duration = ?, category = ?, imageUrl = ?, minAge = ?
+      WHERE id = ? AND userId = ?
+    `,
+    args: [
+      fields.name,
+      fields.minPlayers,
+      fields.maxPlayers,
+      fields.duration,
+      fields.category,
+      fields.imageUrl,
+      fields.minAge,
+      id,
+      userId
+    ]
+  });
 
-  if (result.changes === 0) return null;
-  return db.prepare('SELECT * FROM boardgames WHERE id = ?').get(id);
+  if (result.rowsAffected === 0) return null;
+
+  const updated = await db.execute({ sql: 'SELECT * FROM boardgames WHERE id = ?', args: [id] });
+  return updated.rows[0];
 }
 
-function remove(id, userId) {
-  const result = db.prepare('DELETE FROM boardgames WHERE id = ? AND userId = ?').run(id, userId);
-  return result.changes > 0;
+async function remove(id, userId) {
+  const result = await db.execute({
+    sql: 'DELETE FROM boardgames WHERE id = ? AND userId = ?',
+    args: [id, userId]
+  });
+  return result.rowsAffected > 0;
 }
 
-function randomOneByUser(userId) {
-  return db.prepare('SELECT * FROM boardgames WHERE userId = ? ORDER BY RANDOM() LIMIT 1').get(userId) || null;
+async function randomOneByUser(userId) {
+  const result = await db.execute({
+    sql: 'SELECT * FROM boardgames WHERE userId = ? ORDER BY RANDOM() LIMIT 1',
+    args: [userId]
+  });
+  return result.rows[0] || null;
 }
 
 module.exports = { readAllByUser, create, update, remove, randomOneByUser };

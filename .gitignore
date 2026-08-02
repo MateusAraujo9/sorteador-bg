@@ -4,3 +4,6 @@ Thumbs.db
 
 # banco local (contas, sessões, jogos) — tratado localmente onde o app roda
 /data/
+
+# credenciais locais (token da Turso etc.)
+.env
