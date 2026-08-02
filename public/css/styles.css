@@ -286,6 +286,17 @@ input:focus-visible {
   box-shadow: 0 0 0 3px rgba(209, 73, 91, 0.18);
 }
 
+.field input:read-only {
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.field input:read-only:focus-visible {
+  border-color: rgba(36, 27, 18, 0.14);
+  background: var(--card-soft);
+  box-shadow: none;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

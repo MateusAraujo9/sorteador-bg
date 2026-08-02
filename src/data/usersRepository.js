@@ -31,10 +31,10 @@ async function findById(id) {
   return result.rows[0] || null;
 }
 
-async function update(id, { name, email }) {
+async function updateName(id, name) {
   await db.execute({
-    sql: 'UPDATE users SET name = ?, email = ? WHERE id = ?',
-    args: [name, email, id]
+    sql: 'UPDATE users SET name = ? WHERE id = ?',
+    args: [name, id]
   });
   return findById(id);
 }
@@ -46,4 +46,4 @@ async function updatePassword(id, passwordHash) {
   });
 }
 
-module.exports = { create, findByEmail, findById, update, updatePassword };
+module.exports = { create, findByEmail, findById, updateName, updatePassword };

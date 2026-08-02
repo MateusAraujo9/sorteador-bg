@@ -80,19 +80,10 @@ function me(req, res) {
 }
 
 const updateProfile = asyncHandler(async function updateProfile(req, res) {
-  const { name, email, currentPassword, newPassword } = req.body;
+  const { name, currentPassword, newPassword } = req.body;
 
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Nome é obrigatório' });
-  }
-  if (!email || !EMAIL_RE.test(email.trim())) {
-    return res.status(400).json({ error: 'Informe um e-mail válido' });
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const existing = await usersRepository.findByEmail(normalizedEmail);
-  if (existing && existing.id !== req.user.id) {
-    return res.status(409).json({ error: 'Já existe uma conta com esse e-mail' });
   }
 
   if (newPassword) {
@@ -105,7 +96,7 @@ const updateProfile = asyncHandler(async function updateProfile(req, res) {
     await usersRepository.updatePassword(req.user.id, hashPassword(newPassword));
   }
 
-  const updated = await usersRepository.update(req.user.id, { name: name.trim(), email: normalizedEmail });
+  const updated = await usersRepository.updateName(req.user.id, name.trim());
   res.json(toPublicUser(updated));
 });
 

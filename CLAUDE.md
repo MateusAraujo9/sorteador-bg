@@ -72,7 +72,7 @@ When adding a boardgame endpoint: add a repository function if new data access i
 - `POST /login` — `{ email, password }`. Generic `401` on any mismatch (doesn't reveal which field was wrong).
 - `POST /logout` — clears the session (DB row + cookie).
 - `GET /me` — current user (requires auth).
-- `PATCH /me` — `{ name, email, currentPassword?, newPassword? }` (requires auth). `newPassword` requires a correct `currentPassword`.
+- `PATCH /me` — `{ name, currentPassword?, newPassword? }` (requires auth). `newPassword` requires a correct `currentPassword`. Email is intentionally not editable here — `usersRepository.updateName` only ever touches `name`; the profile form's email input is `readonly` and the controller ignores any `email` sent in the body.
 - `POST /forgot-password` — `{ email }`. Always `200` with the same generic message, whether or not the email exists. Emails a `reset-password.html?token=...` link (1-hour expiry) when it does.
 - `POST /reset-password` — `{ token, newPassword }`. `400` if the token is missing/invalid/expired. Invalidates the token and every existing session for that user on success.
 

@@ -270,8 +270,7 @@ async function handleProfileSubmit(event) {
   }
 
   const payload = {
-    name: form.name.value.trim(),
-    email: form.email.value.trim()
+    name: form.name.value.trim()
   };
 
   if (newPassword) {
