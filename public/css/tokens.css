@@ -1,0 +1,45 @@
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --felt: #14302b;
+  --felt-deep: #0c1d19;
+  --felt-line: rgba(244, 236, 216, 0.14);
+
+  --card: #f4ecd8;
+  --card-soft: #ece0c6;
+  --ink: #241b12;
+  --ink-soft: rgba(36, 27, 18, 0.6);
+  --ink-faint: rgba(36, 27, 18, 0.38);
+
+  /* accents */
+  --ember: #d1495b;
+  --ember-dark: #a83247;
+  --gold: #e3a72e;
+  --teal: #3f8481;
+  --mustard: #c9922f;
+  --plum: #8a6a9a;
+
+  /* radii + shadow */
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 9px;
+  --radius-pill: 999px;
+  --shadow-card: 0 20px 45px rgba(9, 20, 17, 0.4);
+  --shadow-soft: 0 8px 20px rgba(9, 20, 17, 0.25);
+
+  /* type */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Inter", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+
+  /* spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sorteador de Boardgames</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="brand-header">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" width="30" height="30">
+          <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#f4ecd8" stroke-width="1.6"/>
+          <circle cx="8" cy="8" r="1.4" fill="#f4ecd8"/>
+          <circle cx="16" cy="8" r="1.4" fill="#f4ecd8"/>
+          <circle cx="12" cy="12" r="1.4" fill="#f4ecd8"/>
+          <circle cx="8" cy="16" r="1.4" fill="#f4ecd8"/>
+          <circle cx="16" cy="16" r="1.4" fill="#f4ecd8"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Sorteador de <em>Boardgames</em></h1>
+        <p>Cadastre sua coleção e deixe a sorte escolher o próximo jogo da mesa.</p>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn is-active" data-tab="register" type="button">Cadastrar</button>
+      <button class="tab-btn" data-tab="list" type="button">Coleção</button>
+      <button class="tab-btn" data-tab="draw" type="button">Sortear</button>
+    </nav>
+
+    <!-- Cadastro -->
+    <section id="tab-register" class="tab-panel is-active">
+      <div class="panel">
+        <h2>Cadastrar boardgame</h2>
+        <form id="registerForm">
+          <div class="field">
+            <label for="name">Nome do jogo *</label>
+            <input type="text" id="name" name="name" placeholder="Ex: Catan, Ticket to Ride..." required>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="minPlayers">Mínimo de jogadores</label>
+              <input type="number" id="minPlayers" name="minPlayers" placeholder="Ex: 2" min="1">
+            </div>
+            <div class="field">
+              <label for="maxPlayers">Máximo de jogadores</label>
+              <input type="number" id="maxPlayers" name="maxPlayers" placeholder="Ex: 6" min="1">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="duration">Duração (minutos)</label>
+              <input type="number" id="duration" name="duration" placeholder="Ex: 60" min="1">
+            </div>
+            <div class="field">
+              <label for="category">Categoria</label>
+              <input type="text" id="category" name="category" placeholder="Ex: Estratégia, Party...">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="imageUrl">URL da imagem (opcional)</label>
+              <input type="url" id="imageUrl" name="imageUrl" placeholder="https://exemplo.com/imagem.jpg">
+            </div>
+            <div class="field">
+              <label for="minAge">Idade mínima (opcional)</label>
+              <input type="number" id="minAge" name="minAge" placeholder="Ex: 8" min="0">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Cadastrar boardgame</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Coleção -->
+    <section id="tab-list" class="tab-panel">
+      <div class="panel">
+        <h2>Sua coleção</h2>
+        <div class="stats">
+          <div class="stat-tile">
+            <div class="number" id="totalCount">0</div>
+            <div class="label">Total</div>
+          </div>
+          <div class="stat-tile">
+            <div class="number" id="categoriesCount">0</div>
+            <div class="label">Categorias</div>
+          </div>
+          <div class="stat-tile">
+            <div class="number" id="avgDuration">0</div>
+            <div class="label">Duração média</div>
+          </div>
+        </div>
+        <div id="boardgamesList" class="game-list"></div>
+      </div>
+    </section>
+
+    <!-- Sorteio -->
+    <section id="tab-draw" class="tab-panel">
+      <div id="drawStage" class="draw-stage">
+        <h2 class="draw-title">Sortear boardgame</h2>
+        <div class="dice-stage">
+          <div class="die" id="die">
+            <div class="die__face" id="dieFace">
+              <span class="pip" data-pos="5"></span>
+            </div>
+          </div>
+        </div>
+        <p class="draw-hint">Pronto para rolar? Vamos ver qual jogo entra na mesa hoje.</p>
+        <button class="btn btn-primary btn-large" id="drawTrigger" type="button">Rolar os dados</button>
+        <div id="resultTicket" class="ticket" hidden></div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
