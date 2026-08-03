@@ -71,19 +71,12 @@ function gameLinksMarkup(game) {
 
 function gameCardTemplate(game) {
   const spine = spineIndex(game.category);
+  const isDeleted = Boolean(game.deletedAt);
   const media = game.imageUrl
     ? `<img src="${escapeHtml(game.imageUrl)}" alt="${escapeHtml(game.name)}" loading="lazy" onerror="this.remove()">`
     : `<span class="game-card__media-fallback">${icons.die}</span>`;
 
-  return `
-    <article class="game-card">
-      <span class="game-card__spine spine-${spine}"></span>
-      <div class="game-card__media">${media}</div>
-      <div class="game-card__body">
-        <h3 class="game-card__title">${escapeHtml(game.name)}</h3>
-        <div class="game-card__stats">${gameStatsMarkup(game)}</div>
-        ${gameLinksMarkup(game)}
-      </div>
+  const actions = isDeleted ? '' : `
       <div class="game-card__actions">
         <button class="icon-btn" type="button" data-edit-id="${game.id}" aria-label="Editar ${escapeHtml(game.name)}">
           ${icons.edit}
@@ -91,7 +84,18 @@ function gameCardTemplate(game) {
         <button class="icon-btn icon-btn--danger" type="button" data-delete-id="${game.id}" data-delete-name="${escapeHtml(game.name)}" aria-label="Remover ${escapeHtml(game.name)}">
           ${icons.trash}
         </button>
+      </div>`;
+
+  return `
+    <article class="game-card${isDeleted ? ' game-card--deleted' : ''}">
+      <span class="game-card__spine spine-${spine}"></span>
+      <div class="game-card__media">${media}</div>
+      <div class="game-card__body">
+        <h3 class="game-card__title">${escapeHtml(game.name)}${isDeleted ? '<span class="game-card__badge">Excluído</span>' : ''}</h3>
+        <div class="game-card__stats">${gameStatsMarkup(game)}</div>
+        ${gameLinksMarkup(game)}
       </div>
+      ${actions}
     </article>`;
 }
 

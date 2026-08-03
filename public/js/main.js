@@ -92,7 +92,9 @@ async function populateCategoryFilter() {
 
 function populateListCategoryFilter() {
   const select = document.getElementById('filterListCategory');
-  select.innerHTML = categoryOptionsHtml(allGames, select.value);
+  const showDeleted = document.getElementById('filterListShowDeleted').checked;
+  const games = showDeleted ? allGames : allGames.filter(g => !g.deletedAt);
+  select.innerHTML = categoryOptionsHtml(games, select.value);
 }
 
 function gameMatchesFilters(game, filters) {
@@ -110,6 +112,7 @@ function gameMatchesFilters(game, filters) {
   if (filters.category) {
     if (game.category !== filters.category) return false;
   }
+  if (!filters.showDeleted && game.deletedAt) return false;
   return true;
 }
 
@@ -118,7 +121,8 @@ function applyListFilters() {
     name: document.getElementById('filterListName').value.trim(),
     players: document.getElementById('filterListPlayers').value,
     minAge: document.getElementById('filterListAge').value,
-    category: document.getElementById('filterListCategory').value
+    category: document.getElementById('filterListCategory').value,
+    showDeleted: document.getElementById('filterListShowDeleted').checked
   };
 
   const filtered = allGames.filter(g => gameMatchesFilters(g, filters));
@@ -131,6 +135,7 @@ function clearListFilters() {
   document.getElementById('filterListPlayers').value = '';
   document.getElementById('filterListAge').value = '';
   document.getElementById('filterListCategory').value = '';
+  document.getElementById('filterListShowDeleted').checked = false;
   applyListFilters();
 }
 
@@ -228,7 +233,7 @@ function computeStats(games) {
 
 async function loadGames() {
   try {
-    allGames = await api.list();
+    allGames = await api.list(true);
     populateListCategoryFilter();
     applyListFilters();
   } catch (err) {
@@ -458,6 +463,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(id).addEventListener('input', applyListFilters);
   });
   document.getElementById('filterListCategory').addEventListener('change', applyListFilters);
+  document.getElementById('filterListShowDeleted').addEventListener('change', () => {
+    populateListCategoryFilter();
+    applyListFilters();
+  });
   document.getElementById('clearListFiltersBtn').addEventListener('click', clearListFilters);
   document.getElementById('clearDrawFiltersBtn').addEventListener('click', clearDrawFilters);
 

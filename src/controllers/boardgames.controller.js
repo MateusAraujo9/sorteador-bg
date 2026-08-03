@@ -2,7 +2,8 @@ const repository = require('../data/boardgamesRepository');
 const asyncHandler = require('../utils/asyncHandler');
 
 const list = asyncHandler(async function list(req, res) {
-  res.json(await repository.readAllByUser(req.user.id));
+  const includeDeleted = req.query.includeDeleted === 'true';
+  res.json(await repository.readAllByUser(req.user.id, { includeDeleted }));
 });
 
 const create = asyncHandler(async function create(req, res) {

@@ -28,7 +28,7 @@ function jsonBody(body) {
 }
 
 export const api = {
-  list: () => request('/boardgames'),
+  list: (includeDeleted = false) => request(`/boardgames${includeDeleted ? '?includeDeleted=true' : ''}`),
   create: game => request('/boardgames', { method: 'POST', ...jsonBody(game) }),
   update: (id, game) => request(`/boardgames/${id}`, { method: 'PUT', ...jsonBody(game) }),
   remove: id => request(`/boardgames/${id}`, { method: 'DELETE' }),

@@ -1,9 +1,11 @@
 const db = require('./db');
 const linksRepository = require('./boardgameLinksRepository');
 
-async function readAllByUser(userId) {
+async function readAllByUser(userId, { includeDeleted = false } = {}) {
   const result = await db.execute({
-    sql: 'SELECT * FROM boardgames WHERE userId = ? AND deletedAt IS NULL ORDER BY createdAt ASC',
+    sql: includeDeleted
+      ? 'SELECT * FROM boardgames WHERE userId = ? ORDER BY createdAt ASC'
+      : 'SELECT * FROM boardgames WHERE userId = ? AND deletedAt IS NULL ORDER BY createdAt ASC',
     args: [userId]
   });
   const games = result.rows;

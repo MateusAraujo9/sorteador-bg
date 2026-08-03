@@ -532,6 +532,29 @@ input:focus-visible {
   background: #fff;
 }
 
+.collection-filters__field--checkbox {
+  width: auto;
+  justify-content: flex-end;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 9px 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ember);
+  cursor: pointer;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -627,6 +650,10 @@ input:focus-visible {
   flex-shrink: 0;
 }
 
+.game-card--deleted {
+  opacity: 0.6;
+}
+
 .game-card__title {
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -636,6 +663,21 @@ input:focus-visible {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.game-card__badge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-faint);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
 }
 
 .game-card__stats {
