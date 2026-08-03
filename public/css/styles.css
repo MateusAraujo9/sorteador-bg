@@ -479,6 +479,54 @@ input:focus-visible {
 }
 
 /* ---------- stats ---------- */
+.collection-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.collection-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 130px;
+}
+
+.collection-filters__field--search {
+  flex: 1 1 220px;
+  width: auto;
+}
+
+.collection-filters__field label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.collection-filters__field input,
+.collection-filters__field select {
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(36, 27, 18, 0.14);
+  background: var(--card-soft);
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.collection-filters__field input::placeholder {
+  color: var(--ink-faint);
+}
+
+.collection-filters__field input:focus-visible,
+.collection-filters__field select:focus-visible {
+  outline: none;
+  border-color: var(--ember);
+  background: #fff;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -913,6 +961,12 @@ input:focus-visible {
 
   .link-add-row {
     grid-template-columns: 1fr;
+  }
+
+  .collection-filters__field,
+  .collection-filters__field--search {
+    width: 100%;
+    flex-basis: 100%;
   }
 
   .ticket__title {

@@ -7,6 +7,7 @@ let currentUser = null;
 let editingGameId = null;
 let currentLinks = [];
 let originalLinkIds = [];
+let allGames = [];
 
 function handleAuthError(err) {
   if (err && err.status === 401) {
@@ -67,23 +68,61 @@ function switchTab(tab) {
   if (tab === 'profile' && currentUser) fillProfileForm(currentUser);
 }
 
+function categoryOptionsHtml(games, selectedValue) {
+  const categories = [...new Set(games.map(g => g.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  return `<option value="">Todas</option>${
+    categories.map(c => `<option value="${escapeHtml(c)}"${c === selectedValue ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')
+  }`;
+}
+
 async function populateCategoryFilter() {
   const select = document.getElementById('filterCategory');
   const previousValue = select.value;
 
   try {
     const games = await api.list();
-    const categories = [...new Set(games.map(g => g.category).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-    select.innerHTML = `<option value="">Todas</option>${
-      categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
-    }`;
-
-    if (categories.includes(previousValue)) select.value = previousValue;
+    select.innerHTML = categoryOptionsHtml(games, previousValue);
   } catch (err) {
     handleAuthError(err);
   }
+}
+
+function populateListCategoryFilter() {
+  const select = document.getElementById('filterListCategory');
+  select.innerHTML = categoryOptionsHtml(allGames, select.value);
+}
+
+function gameMatchesFilters(game, filters) {
+  if (filters.name) {
+    if (!game.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
+  }
+  if (filters.players) {
+    const players = Number(filters.players);
+    if (game.minPlayers && Number(game.minPlayers) > players) return false;
+    if (game.maxPlayers && Number(game.maxPlayers) < players) return false;
+  }
+  if (filters.minAge) {
+    if (game.minAge && Number(game.minAge) > Number(filters.minAge)) return false;
+  }
+  if (filters.category) {
+    if (game.category !== filters.category) return false;
+  }
+  return true;
+}
+
+function applyListFilters() {
+  const filters = {
+    name: document.getElementById('filterListName').value.trim(),
+    players: document.getElementById('filterListPlayers').value,
+    minAge: document.getElementById('filterListAge').value,
+    category: document.getElementById('filterListCategory').value
+  };
+
+  const filtered = allGames.filter(g => gameMatchesFilters(g, filters));
+  renderGameList(document.getElementById('boardgamesList'), filtered, handleDelete, enterEditMode);
+  renderStats(computeStats(filtered));
 }
 
 function renderCurrentLinks() {
@@ -173,11 +212,10 @@ function computeStats(games) {
 }
 
 async function loadGames() {
-  const listEl = document.getElementById('boardgamesList');
   try {
-    const games = await api.list();
-    renderGameList(listEl, games, handleDelete, enterEditMode);
-    renderStats(computeStats(games));
+    allGames = await api.list();
+    populateListCategoryFilter();
+    applyListFilters();
   } catch (err) {
     if (!handleAuthError(err)) showToast('Não foi possível carregar sua coleção.', 'error');
   }
@@ -394,6 +432,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCurrentLinks();
   document.getElementById('profileForm').addEventListener('submit', handleProfileSubmit);
   document.getElementById('drawTrigger').addEventListener('click', handleDraw);
+
+  ['filterListName', 'filterListPlayers', 'filterListAge'].forEach(id => {
+    document.getElementById(id).addEventListener('input', applyListFilters);
+  });
+  document.getElementById('filterListCategory').addEventListener('change', applyListFilters);
 
   try {
     const user = await api.auth.me();

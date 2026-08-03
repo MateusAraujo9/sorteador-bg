@@ -6,7 +6,7 @@ Cadastre sua coleção de jogos de tabuleiro e deixe a sorte escolher o próximo
 
 - **Conta** — crie uma conta ou entre com e-mail e senha; cada usuário só vê e sorteia os próprios jogos. Esqueceu a senha? Tem recuperação por e-mail.
 - **Cadastrar** — registre jogos com nome, número de jogadores, duração, categoria, idade mínima, imagem e documentos (manual, expansões...).
-- **Coleção** — veja todos os jogos cadastrados, com estatísticas (total, categorias, duração média), edição e remoção individual.
+- **Coleção** — veja todos os jogos cadastrados, com estatísticas (total, categorias, duração média), edição e remoção individual. Dá pra filtrar por nome, jogadores, idade e categoria.
 - **Sortear** — role os dados e receba um bilhete de sorteio com o jogo escolhido aleatoriamente. Dá pra filtrar por jogadores, idade e categoria (opcional).
 - **Perfil** — edite nome, e-mail e senha da conta logada.
 

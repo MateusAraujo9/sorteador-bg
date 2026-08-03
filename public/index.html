@@ -152,6 +152,26 @@
       <section id="tab-list" class="tab-panel">
         <div class="panel">
           <h2>Sua coleção</h2>
+          <div class="collection-filters">
+            <div class="collection-filters__field collection-filters__field--search">
+              <label for="filterListName">Nome</label>
+              <input type="text" id="filterListName" placeholder="Buscar por nome...">
+            </div>
+            <div class="collection-filters__field">
+              <label for="filterListPlayers">Jogadores</label>
+              <input type="number" id="filterListPlayers" min="1" placeholder="Qualquer">
+            </div>
+            <div class="collection-filters__field">
+              <label for="filterListAge">Idade</label>
+              <input type="number" id="filterListAge" min="0" placeholder="Qualquer">
+            </div>
+            <div class="collection-filters__field">
+              <label for="filterListCategory">Categoria</label>
+              <select id="filterListCategory">
+                <option value="">Todas</option>
+              </select>
+            </div>
+          </div>
           <div class="stats">
             <div class="stat-tile">
               <div class="number" id="totalCount">0</div>
