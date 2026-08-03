@@ -62,6 +62,14 @@ const remove = asyncHandler(async function remove(req, res) {
   res.json({ message: 'Boardgame removido com sucesso' });
 });
 
+const restore = asyncHandler(async function restore(req, res) {
+  const restored = await repository.restore(req.params.id, req.user.id);
+  if (!restored) {
+    return res.status(404).json({ error: 'Boardgame excluído não encontrado' });
+  }
+  res.json({ message: 'Boardgame reativado com sucesso' });
+});
+
 const random = asyncHandler(async function random(req, res) {
   const { players, minAge, category } = req.query;
   const hasFilters = Boolean(players || minAge || category);
@@ -77,4 +85,4 @@ const random = asyncHandler(async function random(req, res) {
   res.json(game);
 });
 
-module.exports = { list, create, update, remove, random };
+module.exports = { list, create, update, remove, restore, random };

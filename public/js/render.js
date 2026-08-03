@@ -22,7 +22,7 @@ export function renderEmptyState(container, { title, message }) {
     </div>`;
 }
 
-export function renderGameList(container, games, onDelete, onEdit) {
+export function renderGameList(container, games, onDelete, onEdit, onRestore) {
   if (games.length === 0) {
     renderEmptyState(container, {
       title: 'Sua estante está vazia.',
@@ -39,6 +39,10 @@ export function renderGameList(container, games, onDelete, onEdit) {
 
   container.querySelectorAll('[data-edit-id]').forEach(btn => {
     btn.addEventListener('click', () => onEdit(games.find(g => g.id === btn.dataset.editId)));
+  });
+
+  container.querySelectorAll('[data-restore-id]').forEach(btn => {
+    btn.addEventListener('click', () => onRestore(btn.dataset.restoreId, btn.dataset.restoreName));
   });
 }
 
@@ -76,7 +80,12 @@ function gameCardTemplate(game) {
     ? `<img src="${escapeHtml(game.imageUrl)}" alt="${escapeHtml(game.name)}" loading="lazy" onerror="this.remove()">`
     : `<span class="game-card__media-fallback">${icons.die}</span>`;
 
-  const actions = isDeleted ? '' : `
+  const actions = isDeleted ? `
+      <div class="game-card__actions">
+        <button class="icon-btn icon-btn--restore" type="button" data-restore-id="${game.id}" data-restore-name="${escapeHtml(game.name)}" aria-label="Reativar ${escapeHtml(game.name)}">
+          ${icons.restore}
+        </button>
+      </div>` : `
       <div class="game-card__actions">
         <button class="icon-btn" type="button" data-edit-id="${game.id}" aria-label="Editar ${escapeHtml(game.name)}">
           ${icons.edit}

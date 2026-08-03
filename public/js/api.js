@@ -32,6 +32,7 @@ export const api = {
   create: game => request('/boardgames', { method: 'POST', ...jsonBody(game) }),
   update: (id, game) => request(`/boardgames/${id}`, { method: 'PUT', ...jsonBody(game) }),
   remove: id => request(`/boardgames/${id}`, { method: 'DELETE' }),
+  restore: id => request(`/boardgames/${id}/restore`, { method: 'POST' }),
   drawRandom: (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.players) params.set('players', filters.players);

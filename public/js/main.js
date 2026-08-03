@@ -126,7 +126,7 @@ function applyListFilters() {
   };
 
   const filtered = allGames.filter(g => gameMatchesFilters(g, filters));
-  renderGameList(document.getElementById('boardgamesList'), filtered, handleDelete, enterEditMode);
+  renderGameList(document.getElementById('boardgamesList'), filtered, handleDelete, enterEditMode, handleRestore);
   renderStats(computeStats(filtered));
 }
 
@@ -256,6 +256,16 @@ async function handleDelete(id, name) {
     loadGames();
   } catch (err) {
     if (!handleAuthError(err)) showToast('Não foi possível remover o jogo. Tente novamente.', 'error');
+  }
+}
+
+async function handleRestore(id, name) {
+  try {
+    await api.restore(id);
+    showToast(`"${name}" foi reativado.`, 'success');
+    loadGames();
+  } catch (err) {
+    if (!handleAuthError(err)) showToast('Não foi possível reativar o jogo. Tente novamente.', 'error');
   }
 }
 

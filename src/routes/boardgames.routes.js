@@ -12,6 +12,7 @@ router.post('/', controller.create);
 router.get('/random', controller.random);
 router.put('/:id', controller.update);
 router.delete('/:id', controller.remove);
+router.post('/:id/restore', controller.restore);
 
 router.get('/:gameId/links', linksController.list);
 router.post('/:gameId/links', linksController.create);

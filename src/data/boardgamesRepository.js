@@ -84,6 +84,14 @@ async function remove(id, userId) {
   return result.rowsAffected > 0;
 }
 
+async function restore(id, userId) {
+  const result = await db.execute({
+    sql: 'UPDATE boardgames SET deletedAt = NULL WHERE id = ? AND userId = ? AND deletedAt IS NOT NULL',
+    args: [id, userId]
+  });
+  return result.rowsAffected > 0;
+}
+
 async function randomOneByUser(userId, filters = {}) {
   const conditions = ['userId = ?', 'deletedAt IS NULL'];
   const args = [userId];
@@ -116,4 +124,4 @@ async function randomOneByUser(userId, filters = {}) {
   return { ...game, links };
 }
 
-module.exports = { readAllByUser, findByIdForUser, create, update, remove, randomOneByUser };
+module.exports = { readAllByUser, findByIdForUser, create, update, remove, restore, randomOneByUser };

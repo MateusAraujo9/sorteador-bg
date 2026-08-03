@@ -478,6 +478,11 @@ input:focus-visible {
   background: rgba(168, 50, 71, 0.1);
 }
 
+.icon-btn--restore:hover {
+  color: var(--teal);
+  background: rgba(63, 132, 129, 0.12);
+}
+
 /* ---------- stats ---------- */
 .collection-filters {
   display: flex;
