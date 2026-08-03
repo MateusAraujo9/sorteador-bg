@@ -2,6 +2,7 @@ import { api } from './api.js';
 import { showToast } from './toast.js';
 import { renderGameList, renderStats, renderTicket, renderLinksList, escapeHtml } from './render.js';
 import { rollDie } from './dice.js';
+import { confirmDialog } from './confirmDialog.js';
 
 let currentUser = null;
 let editingGameId = null;
@@ -236,7 +237,13 @@ async function loadGames() {
 }
 
 async function handleDelete(id, name) {
-  if (!confirm(`Remover "${name}" da sua coleção?`)) return;
+  const confirmed = await confirmDialog({
+    title: 'Remover jogo',
+    message: `Remover "${name}" da sua coleção?`,
+    confirmLabel: 'Remover',
+    cancelLabel: 'Cancelar'
+  });
+  if (!confirmed) return;
 
   try {
     await api.remove(id);
