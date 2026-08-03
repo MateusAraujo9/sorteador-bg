@@ -1,6 +1,6 @@
 import { api } from './api.js';
 import { showToast } from './toast.js';
-import { renderGameList, renderStats, renderTicket, renderLinksList } from './render.js';
+import { renderGameList, renderStats, renderTicket, renderLinksList, escapeHtml } from './render.js';
 import { rollDie } from './dice.js';
 
 let currentUser = null;
@@ -63,7 +63,27 @@ function switchTab(tab) {
   document.querySelector(`[data-tab="${tab}"]`).classList.add('is-active');
 
   if (tab === 'list') loadGames();
+  if (tab === 'draw') populateCategoryFilter();
   if (tab === 'profile' && currentUser) fillProfileForm(currentUser);
+}
+
+async function populateCategoryFilter() {
+  const select = document.getElementById('filterCategory');
+  const previousValue = select.value;
+
+  try {
+    const games = await api.list();
+    const categories = [...new Set(games.map(g => g.category).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    select.innerHTML = `<option value="">Todas</option>${
+      categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
+    }`;
+
+    if (categories.includes(previousValue)) select.value = previousValue;
+  } catch (err) {
+    handleAuthError(err);
+  }
 }
 
 function renderCurrentLinks() {
@@ -217,11 +237,17 @@ async function handleDraw() {
   const dieFace = document.getElementById('dieFace');
   const ticket = document.getElementById('resultTicket');
 
+  const filters = {
+    players: document.getElementById('filterPlayers').value || null,
+    minAge: document.getElementById('filterAge').value || null,
+    category: document.getElementById('filterCategory').value || null
+  };
+
   trigger.disabled = true;
   trigger.textContent = 'Rolando...';
 
   const [result] = await Promise.all([
-    api.drawRandom().catch(err => ({ __error: err })),
+    api.drawRandom(filters).catch(err => ({ __error: err })),
     rollDie(dieFace)
   ]);
 

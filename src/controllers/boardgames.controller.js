@@ -62,9 +62,16 @@ const remove = asyncHandler(async function remove(req, res) {
 });
 
 const random = asyncHandler(async function random(req, res) {
-  const game = await repository.randomOneByUser(req.user.id);
+  const { players, minAge, category } = req.query;
+  const hasFilters = Boolean(players || minAge || category);
+
+  const game = await repository.randomOneByUser(req.user.id, { players, minAge, category });
   if (!game) {
-    return res.status(404).json({ error: 'Nenhum boardgame cadastrado para sortear' });
+    return res.status(404).json({
+      error: hasFilters
+        ? 'Nenhum jogo encontrado com esses filtros.'
+        : 'Nenhum boardgame cadastrado para sortear'
+    });
   }
   res.json(game);
 });

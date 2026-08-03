@@ -32,7 +32,14 @@ export const api = {
   create: game => request('/boardgames', { method: 'POST', ...jsonBody(game) }),
   update: (id, game) => request(`/boardgames/${id}`, { method: 'PUT', ...jsonBody(game) }),
   remove: id => request(`/boardgames/${id}`, { method: 'DELETE' }),
-  drawRandom: () => request('/boardgames/random'),
+  drawRandom: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.players) params.set('players', filters.players);
+    if (filters.minAge) params.set('minAge', filters.minAge);
+    if (filters.category) params.set('category', filters.category);
+    const qs = params.toString();
+    return request(`/boardgames/random${qs ? `?${qs}` : ''}`);
+  },
 
   createLink: (gameId, link) => request(`/boardgames/${gameId}/links`, { method: 'POST', ...jsonBody(link) }),
   removeLink: (gameId, linkId) => request(`/boardgames/${gameId}/links/${linkId}`, { method: 'DELETE' }),

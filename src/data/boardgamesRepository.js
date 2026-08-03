@@ -85,10 +85,30 @@ async function remove(id, userId) {
   return true;
 }
 
-async function randomOneByUser(userId) {
+async function randomOneByUser(userId, filters = {}) {
+  const conditions = ['userId = ?'];
+  const args = [userId];
+
+  if (filters.players) {
+    conditions.push('(minPlayers IS NULL OR CAST(minPlayers AS INTEGER) <= ?)');
+    args.push(Number(filters.players));
+    conditions.push('(maxPlayers IS NULL OR CAST(maxPlayers AS INTEGER) >= ?)');
+    args.push(Number(filters.players));
+  }
+
+  if (filters.minAge) {
+    conditions.push('(minAge IS NULL OR CAST(minAge AS INTEGER) <= ?)');
+    args.push(Number(filters.minAge));
+  }
+
+  if (filters.category) {
+    conditions.push('category = ?');
+    args.push(filters.category);
+  }
+
   const result = await db.execute({
-    sql: 'SELECT * FROM boardgames WHERE userId = ? ORDER BY RANDOM() LIMIT 1',
-    args: [userId]
+    sql: `SELECT * FROM boardgames WHERE ${conditions.join(' AND ')} ORDER BY RANDOM() LIMIT 1`,
+    args
   });
   const game = result.rows[0];
   if (!game) return null;
