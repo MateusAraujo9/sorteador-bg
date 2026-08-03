@@ -187,6 +187,18 @@ async function reconcileLinks(gameId) {
   ]);
 }
 
+function updateImagePreview(url) {
+  const preview = document.getElementById('imagePreview');
+  const img = document.getElementById('imagePreviewImg');
+  if (!url) {
+    preview.hidden = true;
+    img.removeAttribute('src');
+    return;
+  }
+  img.src = url;
+  preview.hidden = false;
+}
+
 function enterEditMode(game) {
   editingGameId = game.id;
 
@@ -198,6 +210,7 @@ function enterEditMode(game) {
   form.category.value = game.category || '';
   form.imageUrl.value = game.imageUrl || '';
   form.minAge.value = game.minAge || '';
+  updateImagePreview(game.imageUrl || '');
 
   currentLinks = (game.links || []).map(l => ({ key: l.id, id: l.id, label: l.label, url: l.url }));
   originalLinkIds = currentLinks.map(l => l.id);
@@ -219,6 +232,7 @@ function exitEditMode() {
   document.getElementById('registerSubmitBtn').textContent = 'Cadastrar boardgame';
   document.getElementById('cancelEditBtn').hidden = true;
   document.getElementById('registerForm').reset();
+  updateImagePreview('');
 }
 
 function computeStats(games) {
@@ -456,6 +470,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
   document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+  document.getElementById('imageUrl').addEventListener('input', e => updateImagePreview(e.target.value.trim()));
+  document.getElementById('imagePreviewImg').addEventListener('error', () => {
+    document.getElementById('imagePreview').hidden = true;
+  });
   document.getElementById('addLinkBtn').addEventListener('click', handleAddLink);
   ['linkLabelInput', 'linkUrlInput'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', event => {
