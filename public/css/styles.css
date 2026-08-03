@@ -483,6 +483,11 @@ input:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.collection-filters__clear {
+  display: inline-block;
   margin-bottom: var(--space-5);
 }
 
@@ -712,6 +717,11 @@ input:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.draw-filters__clear {
+  display: inline-block;
   margin-bottom: var(--space-6);
 }
 

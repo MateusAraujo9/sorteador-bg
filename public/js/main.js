@@ -125,6 +125,20 @@ function applyListFilters() {
   renderStats(computeStats(filtered));
 }
 
+function clearListFilters() {
+  document.getElementById('filterListName').value = '';
+  document.getElementById('filterListPlayers').value = '';
+  document.getElementById('filterListAge').value = '';
+  document.getElementById('filterListCategory').value = '';
+  applyListFilters();
+}
+
+function clearDrawFilters() {
+  document.getElementById('filterPlayers').value = '';
+  document.getElementById('filterAge').value = '';
+  document.getElementById('filterCategory').value = '';
+}
+
 function renderCurrentLinks() {
   renderLinksList(document.getElementById('linksList'), currentLinks, handleRemoveLink);
 }
@@ -437,6 +451,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(id).addEventListener('input', applyListFilters);
   });
   document.getElementById('filterListCategory').addEventListener('change', applyListFilters);
+  document.getElementById('clearListFiltersBtn').addEventListener('click', clearListFilters);
+  document.getElementById('clearDrawFiltersBtn').addEventListener('click', clearDrawFilters);
 
   try {
     const user = await api.auth.me();
