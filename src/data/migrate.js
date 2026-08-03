@@ -39,6 +39,9 @@ async function runMigrations() {
   if (!columns.rows.some(col => col.name === 'userId')) {
     await db.execute('ALTER TABLE boardgames ADD COLUMN userId TEXT');
   }
+  if (!columns.rows.some(col => col.name === 'deletedAt')) {
+    await db.execute('ALTER TABLE boardgames ADD COLUMN deletedAt TEXT');
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS password_resets (

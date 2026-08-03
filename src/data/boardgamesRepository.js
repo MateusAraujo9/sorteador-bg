@@ -3,7 +3,7 @@ const linksRepository = require('./boardgameLinksRepository');
 
 async function readAllByUser(userId) {
   const result = await db.execute({
-    sql: 'SELECT * FROM boardgames WHERE userId = ? ORDER BY createdAt ASC',
+    sql: 'SELECT * FROM boardgames WHERE userId = ? AND deletedAt IS NULL ORDER BY createdAt ASC',
     args: [userId]
   });
   const games = result.rows;
@@ -20,7 +20,7 @@ async function readAllByUser(userId) {
 
 async function findByIdForUser(id, userId) {
   const result = await db.execute({
-    sql: 'SELECT * FROM boardgames WHERE id = ? AND userId = ?',
+    sql: 'SELECT * FROM boardgames WHERE id = ? AND userId = ? AND deletedAt IS NULL',
     args: [id, userId]
   });
   return result.rows[0] || null;
@@ -53,7 +53,7 @@ async function update(id, userId, fields) {
     sql: `
       UPDATE boardgames
       SET name = ?, minPlayers = ?, maxPlayers = ?, duration = ?, category = ?, imageUrl = ?, minAge = ?
-      WHERE id = ? AND userId = ?
+      WHERE id = ? AND userId = ? AND deletedAt IS NULL
     `,
     args: [
       fields.name,
@@ -76,17 +76,14 @@ async function update(id, userId, fields) {
 
 async function remove(id, userId) {
   const result = await db.execute({
-    sql: 'DELETE FROM boardgames WHERE id = ? AND userId = ?',
-    args: [id, userId]
+    sql: 'UPDATE boardgames SET deletedAt = ? WHERE id = ? AND userId = ? AND deletedAt IS NULL',
+    args: [new Date().toISOString(), id, userId]
   });
-  if (result.rowsAffected === 0) return false;
-
-  await db.execute({ sql: 'DELETE FROM boardgame_links WHERE boardgameId = ?', args: [id] });
-  return true;
+  return result.rowsAffected > 0;
 }
 
 async function randomOneByUser(userId, filters = {}) {
-  const conditions = ['userId = ?'];
+  const conditions = ['userId = ?', 'deletedAt IS NULL'];
   const args = [userId];
 
   if (filters.players) {
