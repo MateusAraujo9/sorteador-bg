@@ -10,6 +10,10 @@ setInterval(() => {
 
 function rateLimit({ windowMs, max, message }) {
   return function rateLimitMiddleware(req, res, next) {
+    // testes de integração fazem muito mais cadastros/logins por IP do que qualquer usuário real faria
+    // na janela de tempo do teste; a lógica de limite em si é coberta à parte por rateLimit.test.js
+    if (process.env.NODE_ENV === 'test') return next();
+
     const key = `${req.baseUrl}${req.path}:${req.ip}`;
     const now = Date.now();
     const bucket = buckets.get(key);

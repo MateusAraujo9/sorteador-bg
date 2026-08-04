@@ -110,6 +110,8 @@ function passwordResetEmailText(resetUrl) {
 }
 
 async function sendPasswordResetEmail(to, resetUrl) {
+  if (process.env.NODE_ENV === 'test') return; // testes não devem depender de rede/Brevo
+
   const response = await fetch(BREVO_API_URL, {
     method: 'POST',
     signal: AbortSignal.timeout(15000),
@@ -225,6 +227,8 @@ function verificationEmailText(code) {
 }
 
 async function sendVerificationEmail(to, code) {
+  if (process.env.NODE_ENV === 'test') return; // testes não devem depender de rede/Brevo
+
   const response = await fetch(BREVO_API_URL, {
     method: 'POST',
     signal: AbortSignal.timeout(15000),
