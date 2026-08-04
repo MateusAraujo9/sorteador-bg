@@ -1,8 +1,9 @@
 const usersRepository = require('../data/usersRepository');
 const sessionsRepository = require('../data/sessionsRepository');
 const passwordResetsRepository = require('../data/passwordResetsRepository');
+const emailVerificationsRepository = require('../data/emailVerificationsRepository');
 const { hashPassword, verifyPassword } = require('../utils/password');
-const { sendPasswordResetEmail } = require('../utils/mailer');
+const { sendPasswordResetEmail, sendVerificationEmail } = require('../utils/mailer');
 const asyncHandler = require('../utils/asyncHandler');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,19 +37,29 @@ const register = asyncHandler(async function register(req, res) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
-  if (await usersRepository.findByEmail(normalizedEmail)) {
-    return res.status(409).json({ error: 'Já existe uma conta com esse e-mail' });
+  const existing = await usersRepository.findByEmail(normalizedEmail);
+
+  let user;
+  if (existing) {
+    if (existing.emailVerifiedAt) {
+      return res.status(409).json({ error: 'Já existe uma conta com esse e-mail' });
+    }
+    // conta criada mas nunca verificada: reaproveita a linha (nome/senha podem ter mudado) e reenvia o código
+    await usersRepository.updateName(existing.id, name.trim());
+    await usersRepository.updatePassword(existing.id, hashPassword(password));
+    user = existing;
+  } else {
+    user = await usersRepository.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      passwordHash: hashPassword(password)
+    });
   }
 
-  const user = await usersRepository.create({
-    name: name.trim(),
-    email: normalizedEmail,
-    passwordHash: hashPassword(password)
-  });
+  const verification = await emailVerificationsRepository.create(user.id);
+  await sendVerificationEmail(user.email, verification.code);
 
-  const session = await sessionsRepository.create(user.id);
-  setSessionCookie(req, res, session);
-  res.status(201).json(toPublicUser(user));
+  res.status(201).json({ email: user.email, message: 'Enviamos um código de verificação para o seu e-mail.' });
 });
 
 const login = asyncHandler(async function login(req, res) {
@@ -61,6 +72,14 @@ const login = asyncHandler(async function login(req, res) {
   const user = await usersRepository.findByEmail(email.trim().toLowerCase());
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return res.status(401).json({ error: 'E-mail ou senha inválidos' });
+  }
+
+  if (!user.emailVerifiedAt) {
+    return res.status(403).json({
+      error: 'Confirme seu e-mail para continuar.',
+      needsVerification: true,
+      email: user.email
+    });
   }
 
   const session = await sessionsRepository.create(user.id);
@@ -98,6 +117,64 @@ const updateProfile = asyncHandler(async function updateProfile(req, res) {
 
   const updated = await usersRepository.updateName(req.user.id, name.trim());
   res.json(toPublicUser(updated));
+});
+
+const verifyEmail = asyncHandler(async function verifyEmail(req, res) {
+  const { email, code } = req.body;
+
+  if (!email || !EMAIL_RE.test(email.trim())) {
+    return res.status(400).json({ error: 'Informe um e-mail válido' });
+  }
+  if (!code || !/^\d{4}$/.test(code.trim())) {
+    return res.status(400).json({ error: 'Informe o código de 4 dígitos' });
+  }
+
+  const user = await usersRepository.findByEmail(email.trim().toLowerCase());
+  if (!user || user.emailVerifiedAt) {
+    return res.status(400).json({ error: 'Código inválido ou expirado' });
+  }
+
+  const verification = await emailVerificationsRepository.findByUserId(user.id);
+  if (!verification) {
+    return res.status(400).json({ error: 'Código inválido ou expirado' });
+  }
+
+  if (verification.attempts >= emailVerificationsRepository.MAX_ATTEMPTS) {
+    await emailVerificationsRepository.remove(user.id);
+    return res.status(400).json({ error: 'Muitas tentativas. Solicite um novo código.' });
+  }
+
+  if (verification.code !== code.trim()) {
+    await emailVerificationsRepository.incrementAttempts(user.id);
+    return res.status(400).json({ error: 'Código incorreto' });
+  }
+
+  const verifiedUser = await usersRepository.markVerified(user.id);
+  await emailVerificationsRepository.remove(user.id);
+
+  const session = await sessionsRepository.create(verifiedUser.id);
+  setSessionCookie(req, res, session);
+  res.json(toPublicUser(verifiedUser));
+});
+
+const GENERIC_RESEND_MESSAGE = 'Se essa conta existir e ainda não tiver sido verificada, reenviamos o código.';
+
+const resendVerification = asyncHandler(async function resendVerification(req, res) {
+  const { email } = req.body;
+
+  if (!email || !EMAIL_RE.test(email.trim())) {
+    return res.status(400).json({ error: 'Informe um e-mail válido' });
+  }
+
+  const user = await usersRepository.findByEmail(email.trim().toLowerCase());
+
+  if (user && !user.emailVerifiedAt) {
+    const verification = await emailVerificationsRepository.create(user.id);
+    await sendVerificationEmail(user.email, verification.code);
+  }
+
+  // Mesma resposta em qualquer caso, para não revelar se o e-mail está cadastrado ou já verificado.
+  res.json({ message: GENERIC_RESEND_MESSAGE });
 });
 
 const GENERIC_FORGOT_MESSAGE = 'Se esse e-mail estiver cadastrado, você vai receber um link de redefinição em instantes.';
@@ -143,4 +220,14 @@ const resetPassword = asyncHandler(async function resetPassword(req, res) {
   res.json({ message: 'Senha redefinida com sucesso' });
 });
 
-module.exports = { register, login, logout, me, updateProfile, forgotPassword, resetPassword };
+module.exports = {
+  register,
+  login,
+  logout,
+  me,
+  updateProfile,
+  verifyEmail,
+  resendVerification,
+  forgotPassword,
+  resetPassword
+};

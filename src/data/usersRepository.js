@@ -46,4 +46,12 @@ async function updatePassword(id, passwordHash) {
   });
 }
 
-module.exports = { create, findByEmail, findById, updateName, updatePassword };
+async function markVerified(id) {
+  await db.execute({
+    sql: 'UPDATE users SET emailVerifiedAt = ? WHERE id = ?',
+    args: [new Date().toISOString(), id]
+  });
+  return findById(id);
+}
+
+module.exports = { create, findByEmail, findById, updateName, updatePassword, markVerified };

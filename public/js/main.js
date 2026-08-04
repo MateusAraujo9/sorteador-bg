@@ -9,6 +9,7 @@ let editingGameId = null;
 let currentLinks = [];
 let originalLinkIds = [];
 let allGames = [];
+let pendingVerificationEmail = null;
 
 function handleAuthError(err) {
   if (err && err.status === 401) {
@@ -53,6 +54,14 @@ function switchAuthMode(mode) {
   document.getElementById('loginForm').classList.toggle('is-active', mode === 'login');
   document.getElementById('signupForm').classList.toggle('is-active', mode === 'register');
   document.getElementById('forgotForm').classList.toggle('is-active', mode === 'forgot');
+  document.getElementById('verifyForm').classList.toggle('is-active', mode === 'verify');
+}
+
+function enterVerifyMode(email) {
+  pendingVerificationEmail = email;
+  document.getElementById('verifyEmailLabel').textContent = email;
+  document.getElementById('verifyForm').reset();
+  switchAuthMode('verify');
 }
 
 function switchTab(tab) {
@@ -373,6 +382,11 @@ async function handleLogin(event) {
     showToast(`Bem-vindo, ${user.name}!`, 'success');
     showAppView(user);
   } catch (err) {
+    if (err.needsVerification) {
+      enterVerifyMode(err.email);
+      showToast('Confirme seu e-mail para continuar. Você pode reenviar o código abaixo.', 'info');
+      return;
+    }
     showToast(err.message || 'Não foi possível entrar.', 'error');
   }
 }
@@ -380,18 +394,48 @@ async function handleLogin(event) {
 async function handleSignup(event) {
   event.preventDefault();
   const form = event.target;
+  const email = form.email.value.trim();
 
   try {
-    const user = await api.auth.register({
+    await api.auth.register({
       name: form.name.value.trim(),
-      email: form.email.value.trim(),
+      email,
       password: form.password.value
     });
     form.reset();
-    showToast(`Conta criada! Bem-vindo, ${user.name}.`, 'success');
-    showAppView(user);
+    enterVerifyMode(email);
+    showToast('Enviamos um código de verificação para o seu e-mail.', 'success');
   } catch (err) {
     showToast(err.message || 'Não foi possível criar a conta.', 'error');
+  }
+}
+
+async function handleVerifyEmail(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  try {
+    const user = await api.auth.verifyEmail({
+      email: pendingVerificationEmail,
+      code: form.code.value.trim()
+    });
+    form.reset();
+    pendingVerificationEmail = null;
+    showToast(`Conta verificada! Bem-vindo, ${user.name}.`, 'success');
+    showAppView(user);
+  } catch (err) {
+    showToast(err.message || 'Não foi possível verificar o código.', 'error');
+  }
+}
+
+async function handleResendCode() {
+  if (!pendingVerificationEmail) return;
+
+  try {
+    const { message } = await api.auth.resendVerification({ email: pendingVerificationEmail });
+    showToast(message, 'success');
+  } catch (err) {
+    showToast(err.message || 'Não foi possível reenviar o código.', 'error');
   }
 }
 
@@ -467,6 +511,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('forgotForm').addEventListener('submit', handleForgotPassword);
   document.getElementById('forgotPasswordLink').addEventListener('click', () => switchAuthMode('forgot'));
   document.getElementById('backToLoginLink').addEventListener('click', () => switchAuthMode('login'));
+  document.getElementById('verifyForm').addEventListener('submit', handleVerifyEmail);
+  document.getElementById('resendCodeLink').addEventListener('click', handleResendCode);
+  document.getElementById('backToLoginFromVerifyLink').addEventListener('click', () => switchAuthMode('login'));
+  document.getElementById('verifyCode').addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+  });
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
   document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);

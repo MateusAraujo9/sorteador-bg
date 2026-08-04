@@ -5,14 +5,19 @@ async function request(path, options) {
 
   if (!response.ok) {
     let message = 'Algo deu errado. Tente novamente.';
+    let data = null;
     try {
-      const data = await response.json();
+      data = await response.json();
       message = data.error || message;
     } catch {
       // resposta sem corpo JSON, mantém mensagem padrão
     }
     const error = new Error(message);
     error.status = response.status;
+    if (data && data.needsVerification) {
+      error.needsVerification = true;
+      error.email = data.email;
+    }
     throw error;
   }
 
@@ -51,6 +56,8 @@ export const api = {
     login: data => request('/auth/login', { method: 'POST', ...jsonBody(data) }),
     logout: () => request('/auth/logout', { method: 'POST' }),
     updateProfile: data => request('/auth/me', { method: 'PATCH', ...jsonBody(data) }),
+    verifyEmail: data => request('/auth/verify-email', { method: 'POST', ...jsonBody(data) }),
+    resendVerification: data => request('/auth/resend-verification', { method: 'POST', ...jsonBody(data) }),
     forgotPassword: data => request('/auth/forgot-password', { method: 'POST', ...jsonBody(data) }),
     resetPassword: data => request('/auth/reset-password', { method: 'POST', ...jsonBody(data) })
   }

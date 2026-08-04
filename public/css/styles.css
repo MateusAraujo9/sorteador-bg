@@ -180,6 +180,22 @@ input:focus-visible {
   margin: var(--space-4) auto 0;
 }
 
+.verify-hint {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: var(--space-5);
+}
+
+.code-input {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  text-align: center;
+}
+
 /* ---------- tabs ---------- */
 .tabs {
   display: flex;

@@ -11,6 +11,14 @@ async function runMigrations() {
     )
   `);
 
+  const userColumns = await db.execute('PRAGMA table_info(users)');
+  if (!userColumns.rows.some(col => col.name === 'emailVerifiedAt')) {
+    await db.execute('ALTER TABLE users ADD COLUMN emailVerifiedAt TEXT');
+    // contas criadas antes deste recurso já eram funcionais sem verificação — considera todas já verificadas
+    // para não bloquear quem já tinha conta. Só cadastros novos a partir daqui passam pelo fluxo de código.
+    await db.execute('UPDATE users SET emailVerifiedAt = createdAt');
+  }
+
   await db.execute(`
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
@@ -59,6 +67,16 @@ async function runMigrations() {
       label TEXT NOT NULL,
       url TEXT NOT NULL,
       createdAt TEXT NOT NULL
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      userId TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      expiresAt TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0
     )
   `);
 }

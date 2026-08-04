@@ -80,6 +80,17 @@
           </div>
           <button type="submit" class="btn btn-primary">Criar conta</button>
         </form>
+
+        <form id="verifyForm" class="auth-form">
+          <p class="verify-hint">Enviamos um código de 4 dígitos para <strong id="verifyEmailLabel"></strong>. Confira sua caixa de entrada (e o spam).</p>
+          <div class="field">
+            <label for="verifyCode">Código de verificação</label>
+            <input type="text" id="verifyCode" name="code" class="code-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" autocomplete="one-time-code" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Confirmar</button>
+          <button type="button" class="btn-link" id="resendCodeLink">Reenviar código</button>
+          <button type="button" class="btn-link" id="backToLoginFromVerifyLink">Voltar para login</button>
+        </form>
       </div>
     </section>
 

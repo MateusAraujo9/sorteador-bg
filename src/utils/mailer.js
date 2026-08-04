@@ -7,6 +7,7 @@ const INK_SOFT = '#6b6154';
 const EMBER = '#d1495b';
 const SERIF = "Georgia, 'Times New Roman', Times, serif";
 const SANS = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const MONO = "'Courier New', Courier, monospace";
 
 function passwordResetEmailHtml(resetUrl) {
   return `
@@ -132,4 +133,119 @@ async function sendPasswordResetEmail(to, resetUrl) {
   }
 }
 
-module.exports = { sendPasswordResetEmail };
+function verificationEmailHtml(code) {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirme seu e-mail</title>
+</head>
+<body style="margin:0; padding:0; background-color:${FELT};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${FELT};">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+          <tr>
+            <td align="center" style="padding-bottom:24px; font-family:${SANS}; font-size:15px; color:#f4ecd8;">
+              🎲&nbsp;&nbsp;<strong>Sorteador de Boardgames</strong>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:${CARD}; border-radius:16px; padding:40px 36px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="font-family:${SERIF}; font-size:24px; font-weight:bold; color:${EMBER}; padding-bottom:16px;">
+                    Confirme seu e-mail
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="font-family:${SANS}; font-size:15px; line-height:1.6; color:${INK}; padding-bottom:28px;">
+                    Use o código abaixo para concluir seu cadastro no Sorteador de Boardgames.
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:${FELT}; border-radius:12px; padding:18px 32px;">
+                          <span style="font-family:${MONO}; font-size:36px; font-weight:bold; letter-spacing:12px; color:${CARD};">${code}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="font-family:${SANS}; font-size:13px; color:${INK_SOFT}; padding-bottom:24px;">
+                    Esse código expira em 15 minutos.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="border-top:1px solid rgba(36,27,18,0.12); padding-top:20px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-family:${SANS}; font-size:12px; line-height:1.6; color:${INK_SOFT};">
+                          Se você não pediu esse cadastro, pode ignorar este e-mail com segurança.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:24px; font-family:${SANS}; font-size:12px; color:rgba(244,236,216,0.55);">
+              Sorteador de Boardgames
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}
+
+function verificationEmailText(code) {
+  return [
+    'Sorteador de Boardgames',
+    '',
+    'Confirme seu e-mail',
+    '',
+    'Use o código abaixo para concluir seu cadastro:',
+    '',
+    code,
+    '',
+    'Esse código expira em 15 minutos.',
+    'Se você não pediu esse cadastro, pode ignorar este e-mail com segurança.'
+  ].join('\n');
+}
+
+async function sendVerificationEmail(to, code) {
+  const response = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify({
+      sender: { email: process.env.BREVO_SENDER_EMAIL, name: 'Sorteador de Boardgames' },
+      to: [{ email: to }],
+      subject: '🎲 Confirme seu e-mail — Sorteador de Boardgames',
+      htmlContent: verificationEmailHtml(code),
+      textContent: verificationEmailText(code)
+    })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+    throw new Error(`Falha ao enviar e-mail via Brevo (${response.status}): ${errorBody}`);
+  }
+}
+
+module.exports = { sendPasswordResetEmail, sendVerificationEmail };
