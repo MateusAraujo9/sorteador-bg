@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_COOKIE = 'sid';
 
 function toPublicUser(user) {
-  return { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt };
+  return { id: user.id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt };
 }
 
 function setSessionCookie(req, res, session) {

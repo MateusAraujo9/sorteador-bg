@@ -60,5 +60,10 @@ export const api = {
     resendVerification: data => request('/auth/resend-verification', { method: 'POST', ...jsonBody(data) }),
     forgotPassword: data => request('/auth/forgot-password', { method: 'POST', ...jsonBody(data) }),
     resetPassword: data => request('/auth/reset-password', { method: 'POST', ...jsonBody(data) })
+  },
+
+  admin: {
+    listUsers: () => request('/admin/users'),
+    updateUserRole: (id, role) => request(`/admin/users/${id}/role`, { method: 'PATCH', ...jsonBody({ role }) })
   }
 };

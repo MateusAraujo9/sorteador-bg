@@ -1,6 +1,6 @@
 import { api } from './api.js';
 import { showToast } from './toast.js';
-import { renderGameList, renderStats, renderTicket, renderLinksList, escapeHtml } from './render.js';
+import { renderGameList, renderStats, renderTicket, renderLinksList, renderAdminUsers, escapeHtml } from './render.js';
 import { rollDie } from './dice.js';
 import { confirmDialog } from './confirmDialog.js';
 
@@ -35,6 +35,7 @@ function showAppView(user) {
   document.getElementById('appView').hidden = false;
   document.getElementById('userBadge').hidden = false;
   document.getElementById('userBadgeName').textContent = user.name;
+  document.getElementById('adminTabBtn').hidden = user.role !== 'admin';
   fillProfileForm(user);
   switchTab('register');
 }
@@ -79,6 +80,26 @@ function switchTab(tab) {
   if (tab === 'list') loadGames();
   if (tab === 'draw') populateCategoryFilter();
   if (tab === 'profile' && currentUser) fillProfileForm(currentUser);
+  if (tab === 'admin') loadAdminUsers();
+}
+
+async function loadAdminUsers() {
+  try {
+    const users = await api.admin.listUsers();
+    renderAdminUsers(document.getElementById('adminUsersList'), users, currentUser.id, handleChangeUserRole);
+  } catch (err) {
+    if (!handleAuthError(err)) showToast('Não foi possível carregar os usuários.', 'error');
+  }
+}
+
+async function handleChangeUserRole(userId, role) {
+  try {
+    await api.admin.updateUserRole(userId, role);
+    showToast('Perfil atualizado.', 'success');
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível atualizar o perfil.', 'error');
+  }
+  loadAdminUsers();
 }
 
 function categoryOptionsHtml(games, selectedValue) {

@@ -18,6 +18,16 @@ async function runMigrations() {
     // para não bloquear quem já tinha conta. Só cadastros novos a partir daqui passam pelo fluxo de código.
     await db.execute('UPDATE users SET emailVerifiedAt = createdAt');
   }
+  if (!userColumns.rows.some(col => col.name === 'role')) {
+    await db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
+    // o primeiro usuário já cadastrado (por ordem de criação) vira administrador nesta migração única;
+    // cadastros novos a partir daqui sempre nascem como 'user' (ver usersRepository.create)
+    await db.execute(`
+      UPDATE users SET role = 'admin' WHERE id = (
+        SELECT id FROM users ORDER BY createdAt ASC, rowid ASC LIMIT 1
+      )
+    `);
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS sessions (

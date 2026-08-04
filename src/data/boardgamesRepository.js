@@ -124,4 +124,9 @@ async function randomOneByUser(userId, filters = {}) {
   return { ...game, links };
 }
 
-module.exports = { readAllByUser, findByIdForUser, create, update, remove, restore, randomOneByUser };
+async function countByUser() {
+  const result = await db.execute('SELECT userId, COUNT(*) as count FROM boardgames WHERE deletedAt IS NULL GROUP BY userId');
+  return result.rows;
+}
+
+module.exports = { readAllByUser, findByIdForUser, create, update, remove, restore, randomOneByUser, countByUser };

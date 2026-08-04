@@ -101,6 +101,7 @@
         <button class="tab-btn" data-tab="list" type="button">Coleção</button>
         <button class="tab-btn" data-tab="draw" type="button">Sortear</button>
         <button class="tab-btn" data-tab="profile" type="button">Perfil</button>
+        <button class="tab-btn" data-tab="admin" type="button" id="adminTabBtn" hidden>Admin</button>
       </nav>
 
       <!-- Cadastro -->
@@ -274,6 +275,15 @@
             </div>
             <button type="submit" class="btn btn-primary">Salvar alterações</button>
           </form>
+        </div>
+      </section>
+
+      <!-- Admin -->
+      <section id="tab-admin" class="tab-panel">
+        <div class="panel">
+          <h2>Administração</h2>
+          <p class="admin-hint">Usuários cadastrados, quantidade de jogos e perfil de acesso.</p>
+          <div id="adminUsersList" class="admin-user-list"></div>
         </div>
       </section>
     </div>

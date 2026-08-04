@@ -130,6 +130,39 @@ export function renderTicket(container, game) {
   container.hidden = false;
 }
 
+function adminUserRowTemplate(user, currentUserId) {
+  const isSelf = user.id === currentUserId;
+
+  return `
+    <div class="admin-user-row">
+      <div class="admin-user-row__info">
+        <span class="admin-user-row__name">${escapeHtml(user.name)}${isSelf ? ' <span class="admin-user-row__you">(você)</span>' : ''}</span>
+        <span class="admin-user-row__email">${escapeHtml(user.email)}</span>
+      </div>
+      <div class="admin-user-row__stat">
+        <span class="admin-user-row__count">${user.gameCount}</span>
+        <span class="admin-user-row__count-label">jogo${user.gameCount === 1 ? '' : 's'}</span>
+      </div>
+      <select class="role-select" data-user-id="${user.id}"${isSelf ? ' disabled title="Você não pode alterar seu próprio perfil"' : ''}>
+        <option value="user"${user.role === 'user' ? ' selected' : ''}>Usuário</option>
+        <option value="admin"${user.role === 'admin' ? ' selected' : ''}>Administrador</option>
+      </select>
+    </div>`;
+}
+
+export function renderAdminUsers(container, users, currentUserId, onRoleChange) {
+  if (users.length === 0) {
+    renderEmptyState(container, { title: 'Nenhum usuário encontrado.', message: '' });
+    return;
+  }
+
+  container.innerHTML = users.map(u => adminUserRowTemplate(u, currentUserId)).join('');
+
+  container.querySelectorAll('.role-select').forEach(select => {
+    select.addEventListener('change', () => onRoleChange(select.dataset.userId, select.value));
+  });
+}
+
 export function renderLinksList(container, links, onRemove) {
   if (links.length === 0) {
     container.innerHTML = '<p class="links-empty">Nenhum documento adicionado ainda.</p>';

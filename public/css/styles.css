@@ -1007,6 +1007,92 @@ input:focus-visible {
   height: 15px;
 }
 
+/* ---------- admin ---------- */
+.admin-hint {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-5);
+}
+
+.admin-user-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--card-soft);
+  border-radius: var(--radius-md);
+}
+
+.admin-user-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-user-row__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.admin-user-row__you {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.admin-user-row__email {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.admin-user-row__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  min-width: 48px;
+}
+
+.admin-user-row__count {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ember);
+}
+
+.admin-user-row__count-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+
+.role-select {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(36, 27, 18, 0.14);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.role-select:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* ---------- toast ---------- */
 .toast {
   position: fixed;
