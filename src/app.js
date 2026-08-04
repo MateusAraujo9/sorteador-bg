@@ -26,6 +26,7 @@ function createApp() {
     res.status(404).json({ error: 'Rota não encontrada' });
   });
 
+  // eslint-disable-next-line no-unused-vars -- Express só reconhece isto como error handler com 4 parâmetros
   app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).json({ error: 'Erro interno do servidor' });

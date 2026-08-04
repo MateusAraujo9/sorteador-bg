@@ -35,11 +35,17 @@ const resendVerificationLimiter = rateLimit({
   message: 'Muitos pedidos de reenvio. Tente novamente mais tarde.'
 });
 
+const updateProfileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Muitas tentativas. Tente novamente em alguns minutos.'
+});
+
 router.post('/register', registerLimiter, controller.register);
 router.post('/login', loginLimiter, controller.login);
 router.post('/logout', controller.logout);
 router.get('/me', requireAuth, controller.me);
-router.patch('/me', requireAuth, controller.updateProfile);
+router.patch('/me', requireAuth, updateProfileLimiter, controller.updateProfile);
 router.post('/verify-email', verifyEmailLimiter, controller.verifyEmail);
 router.post('/resend-verification', resendVerificationLimiter, controller.resendVerification);
 router.post('/forgot-password', forgotPasswordLimiter, controller.forgotPassword);
