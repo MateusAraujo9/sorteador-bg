@@ -108,6 +108,16 @@
       <section id="tab-register" class="tab-panel is-active">
         <div class="panel">
           <h2 id="registerPanelTitle">Cadastrar boardgame</h2>
+
+          <div class="bgg-search">
+            <label for="bggSearchInput">Buscar no BoardGameGeek (opcional)</label>
+            <div class="bgg-search__row">
+              <input type="text" id="bggSearchInput" placeholder="Ex: Catan, Wingspan...">
+              <button type="button" class="btn btn-secondary" id="bggSearchBtn">Buscar</button>
+            </div>
+            <div id="bggSearchResults" class="bgg-search__results" hidden></div>
+          </div>
+
           <form id="registerForm">
             <div class="field">
               <label for="name">Nome do jogo *</label>

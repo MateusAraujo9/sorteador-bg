@@ -65,5 +65,10 @@ export const api = {
   admin: {
     listUsers: () => request('/admin/users'),
     updateUserRole: (id, role) => request(`/admin/users/${id}/role`, { method: 'PATCH', ...jsonBody({ role }) })
+  },
+
+  bgg: {
+    search: query => request(`/bgg/search?q=${encodeURIComponent(query)}`),
+    getDetails: id => request(`/bgg/${id}`)
   }
 };

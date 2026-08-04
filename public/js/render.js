@@ -163,6 +163,24 @@ export function renderAdminUsers(container, users, currentUserId, onRoleChange) 
   });
 }
 
+export function renderBggResults(container, results, onSelect) {
+  if (results.length === 0) {
+    container.innerHTML = '<p class="bgg-search__empty">Nenhum resultado encontrado.</p>';
+    return;
+  }
+
+  container.innerHTML = results.map(game => `
+    <button type="button" class="bgg-result" data-bgg-id="${escapeHtml(game.id)}">
+      <span class="bgg-result__name">${escapeHtml(game.name)}</span>
+      ${game.yearPublished ? `<span class="bgg-result__year">${escapeHtml(game.yearPublished)}</span>` : ''}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('[data-bgg-id]').forEach(btn => {
+    btn.addEventListener('click', () => onSelect(btn.dataset.bggId));
+  });
+}
+
 export function renderLinksList(container, links, onRemove) {
   if (links.length === 0) {
     container.innerHTML = '<p class="links-empty">Nenhum documento adicionado ainda.</p>';
