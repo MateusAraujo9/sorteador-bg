@@ -38,7 +38,7 @@
     <!-- Autenticação -->
     <section id="authView" class="auth-view" hidden>
       <div class="panel auth-panel">
-        <div class="auth-toggle">
+        <div class="auth-toggle" id="authToggle">
           <button type="button" class="auth-toggle__btn is-active" data-auth-mode="login">Entrar</button>
           <button type="button" class="auth-toggle__btn" data-auth-mode="register">Criar conta</button>
         </div>
@@ -89,7 +89,7 @@
           </div>
           <button type="submit" class="btn btn-primary">Confirmar</button>
           <button type="button" class="btn-link" id="resendCodeLink">Reenviar código</button>
-          <button type="button" class="btn-link" id="backToLoginFromVerifyLink">Voltar para login</button>
+          <button type="button" class="btn-link" id="backFromVerifyLink">Voltar</button>
         </form>
       </div>
     </section>

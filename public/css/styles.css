@@ -142,6 +142,10 @@ input:focus-visible {
   padding: 4px;
 }
 
+.auth-toggle.is-hidden {
+  display: none;
+}
+
 .auth-toggle__btn {
   flex: 1;
   appearance: none;

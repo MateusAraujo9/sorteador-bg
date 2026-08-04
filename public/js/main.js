@@ -10,6 +10,7 @@ let currentLinks = [];
 let originalLinkIds = [];
 let allGames = [];
 let pendingVerificationEmail = null;
+let verifySource = null;
 
 function handleAuthError(err) {
   if (err && err.status === 401) {
@@ -51,16 +52,18 @@ function switchAuthMode(mode) {
   document.querySelectorAll('.auth-toggle__btn').forEach(btn => {
     btn.classList.toggle('is-active', btn.dataset.authMode === mode);
   });
+  document.getElementById('authToggle').classList.toggle('is-hidden', mode === 'verify');
   document.getElementById('loginForm').classList.toggle('is-active', mode === 'login');
   document.getElementById('signupForm').classList.toggle('is-active', mode === 'register');
   document.getElementById('forgotForm').classList.toggle('is-active', mode === 'forgot');
   document.getElementById('verifyForm').classList.toggle('is-active', mode === 'verify');
 }
 
-function enterVerifyMode(email) {
+function enterVerifyMode(email, source) {
   pendingVerificationEmail = email;
+  verifySource = source;
   document.getElementById('verifyEmailLabel').textContent = email;
-  document.getElementById('verifyForm').reset();
+  document.getElementById('verifyCode').value = '';
   switchAuthMode('verify');
 }
 
@@ -383,7 +386,7 @@ async function handleLogin(event) {
     showAppView(user);
   } catch (err) {
     if (err.needsVerification) {
-      enterVerifyMode(err.email);
+      enterVerifyMode(err.email, 'login');
       showToast('Confirme seu e-mail para continuar. Você pode reenviar o código abaixo.', 'info');
       return;
     }
@@ -402,8 +405,7 @@ async function handleSignup(event) {
       email,
       password: form.password.value
     });
-    form.reset();
-    enterVerifyMode(email);
+    enterVerifyMode(email, 'register');
     showToast('Enviamos um código de verificação para o seu e-mail.', 'success');
   } catch (err) {
     showToast(err.message || 'Não foi possível criar a conta.', 'error');
@@ -419,13 +421,19 @@ async function handleVerifyEmail(event) {
       email: pendingVerificationEmail,
       code: form.code.value.trim()
     });
+    document.getElementById(verifySource === 'login' ? 'loginForm' : 'signupForm').reset();
     form.reset();
     pendingVerificationEmail = null;
+    verifySource = null;
     showToast(`Conta verificada! Bem-vindo, ${user.name}.`, 'success');
     showAppView(user);
   } catch (err) {
     showToast(err.message || 'Não foi possível verificar o código.', 'error');
   }
+}
+
+function handleBackFromVerify() {
+  switchAuthMode(verifySource === 'login' ? 'login' : 'register');
 }
 
 async function handleResendCode() {
@@ -513,7 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('backToLoginLink').addEventListener('click', () => switchAuthMode('login'));
   document.getElementById('verifyForm').addEventListener('submit', handleVerifyEmail);
   document.getElementById('resendCodeLink').addEventListener('click', handleResendCode);
-  document.getElementById('backToLoginFromVerifyLink').addEventListener('click', () => switchAuthMode('login'));
+  document.getElementById('backFromVerifyLink').addEventListener('click', handleBackFromVerify);
   document.getElementById('verifyCode').addEventListener('input', e => {
     e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
   });
