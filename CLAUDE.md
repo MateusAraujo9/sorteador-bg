@@ -9,13 +9,14 @@ Sorteador de Boardgames — a Portuguese-language web app for registering board 
 ## Commands
 
 ```
-npm install   # install dependencies (express, cors)
+npm install   # install dependencies (express, cors, plus eslint/eslint-plugin-security as devDependencies)
 npm start     # run the server (node server.js), serves on http://localhost:3000
 npm run dev   # identical to npm start — no watch/reload configured
 npm test      # run the backend test suite (node --test), see Testing below
+npm run lint  # run eslint, see "Code quality: ESLint" below
 ```
 
-There is no linter or build process in this repo.
+There is no build process in this repo.
 
 ## Architecture
 
@@ -127,6 +128,26 @@ Backend-only, integration-style, using Node's built-in `node:test` + `node:asser
 - `tests/rateLimit.test.js` — the one unit-level (no HTTP, no DB) test file, calling the `rateLimit()` middleware factory directly with mock `req`/`res` objects. Deliberately does **not** require `tests/helpers/env.js`, so `NODE_ENV` stays unset in that file's process and the real counting/429 logic in `rateLimit.js` actually runs, instead of being bypassed by the test-mode short-circuit described above.
 - **Convention going forward**: run `npm test` before every push (part of the commit+push-when-working convention below), and any new feature or bugfix should come with test coverage in the relevant `tests/*.test.js` file — extend an existing file for something that fits an existing area (auth, boardgames, links, admin), or add a new `tests/<area>.test.js` following the same `helpers/env` → `helpers/testServer` pattern for a genuinely new area.
 
+## Code quality: ESLint
+
+`eslint.config.js` (flat config, ESLint 9+/10 style) — `npm run lint` runs `eslint .`. Base is `@eslint/js`'s `recommended` config plus `eslint-plugin-security`'s `recommended` config, split across three `files` blocks with different `languageOptions`/globals: `src/**`, `server.js`, `tests/**`, and `eslint.config.js` itself are CommonJS/Node; `public/js/**` is browser ES modules. Deliberately **not** Airbnb/Standard or a formatter (Prettier) — this repo has no build step and no existing style-linting history, so a heavy opinionated config would produce a huge one-time diff for no functional benefit; `recommended` catches real bugs (undefined vars, unreachable code) without imposing style.
+
+Two rules from `eslint-plugin-security`'s recommended set are turned off repo-wide, with the reasoning left as a comment in `eslint.config.js`: `detect-object-injection` and `detect-non-literal-fs-filename`. Both fire on any bracket-notation property access or `fs.*Sync(variablePath)` regardless of whether the key/path is actually attacker-controlled — in this codebase it never is (cookie/session lookups by hardcoded constant, `FACE_POSITIONS[face]` with `face` from a fixed die value, `db.js`'s `DB_FILE`-derived paths from env/config, never from request data). Confirmed false-positive on every instance before disabling — don't re-enable without re-auditing, and don't disable further rules from the security plugin without the same scrutiny (the rest — unsafe regex, `eval`, non-literal `require`, `child_process` — stay on and are meaningful for a Node backend).
+
+## CI/CD pipeline
+
+GitHub Actions (`.github/workflows/ci.yml`), three parallel jobs (`lint`, `test`, `security`), triggered on every PR targeting `main` and every push to `main`. Runs entirely on GitHub's hosted runners — no local machine involvement, no relation to any AI/Claude usage, and well within GitHub Actions' free-tier minutes for a repo this size (repo is **private**, confirmed via the GitHub API returning 404 for unauthenticated access — this matters because it rules out GitHub's own free code scanning/secret scanning, which require GitHub Advanced Security on private repos).
+
+- `lint` — `npm ci` + `npm run lint`.
+- `test` — `npm ci` + `npm test` (the suite described above).
+- `security` — `npm ci` + `npm audit --audit-level=high` (fails on known high/critical vulnerabilities in dependencies) + `gitleaks/gitleaks-action` (open-source secret scanner, the free-repo-private-safe substitute for GitHub's native secret scanning).
+- `.github/dependabot.yml` — weekly update PRs for both the `npm` ecosystem and `github-actions` (the workflow's own `uses:` pins) — Dependabot alerts/PRs are free regardless of repo visibility, unlike code/secret scanning.
+- All three `actions/setup-node` steps use `node-version-file: package.json` (reads `engines.node`) rather than a hardcoded version, so bumping the `engines` field is the only place a Node version upgrade needs to happen.
+
+**Workflow**: feature/fix branches → PR into `main` → all three checks green → merge. `main` itself is (or should be) branch-protected in GitHub's web UI (Settings → Branches — not doable from the repo/CLI) to require the `lint`/`test`/`security` status checks before merge, with **no required review approval** (single-maintainer project — requiring another human's review would just block every PR indefinitely). Whatever auto-deploys the app (Render, based on `.env.example`'s and `mailer.js`'s comments) should have its auto-deploy pointed at `main`; once `main` only accepts CI-green merges, that auto-deploy is safe by construction and needs no separate gating step in the workflow itself.
+
+Complementary but **not** part of the automated pipeline: periodically running `/code-review security-review` or `/code-review ultra` (Claude Code features already available in this environment) before/after touching anything auth-related — this uses Claude/Anthropic usage on demand, unlike everything else on this list, and is a manual practice, not a CI gate.
+
 ## Design system
 
 Tabletop/felt-table visual identity, tokenized in `public/css/tokens.css`:
@@ -146,5 +167,5 @@ Tabletop/felt-table visual identity, tokenized in `public/css/tokens.css`:
 - User-facing strings and UI copy are in Portuguese (pt-BR), written in an active, direct voice (e.g. toast/error copy says what happened and what to do, not a generic "erro ao..."); match that when adding new UI text or API error messages.
 - No bundler/build step by design — frontend JS relies on native ES module `import`/`export` served as static files. If you add a module, reference it with an explicit relative path (and `.js` extension) from its importer.
 - Don't send outbound email over SMTP — use an HTTP-based provider API instead (see `mailer.js`). SMTP ports are frequently blocked on free-tier hosts, and the failure mode is a silent hang (no error, no timeout by default), not a clean rejection — it's a bad category of bug to reintroduce.
-- **Commit and push automatically once a feature is implemented and verified working** — the user has opted into this for this project specifically, overriding Claude Code's general default of only committing when explicitly asked. Still use good commit hygiene (one feature per commit, descriptive message, no unrelated changes bundled in) and still ask first for anything destructive/irreversible (force-push, history rewrite, etc.) — this only covers the normal "commit + push the working change" step.
-- **Run `npm test` before every push, and cover new work with tests** — also user-opted-in specifically for this project. Every new feature or bugfix should land with test coverage in `tests/` (see Testing above) — extend an existing `tests/*.test.js` file if the change fits an existing area, add a new one following the same pattern otherwise. Don't push if `npm test` is failing; fix it (or the code) first.
+- **Commit and push automatically once a feature is implemented and verified working** — the user has opted into this for this project specifically, overriding Claude Code's general default of only committing when explicitly asked. Still use good commit hygiene (one feature per commit, descriptive message, no unrelated changes bundled in) and still ask first for anything destructive/irreversible (force-push, history rewrite, etc.) — this only covers the normal "commit + push the working change" step. **Since the CI/CD pipeline above (added 2026-08-04), this means pushing a feature/fix branch and opening a PR into `main`, not pushing straight to `main`** — `main` is meant to only move via CI-green merges. No `gh` CLI is available in this environment as of that date, so "open a PR" means pushing the branch and handing the user the compare URL (`https://github.com/MateusAraujo9/sorteador-bg/compare/main...<branch>?quick_pull=1`) to click, unless `gh` becomes available later.
+- **Run `npm test` and `npm run lint` before every push, and cover new work with tests** — also user-opted-in specifically for this project (lint requirement added alongside the CI pipeline, same date). Every new feature or bugfix should land with test coverage in `tests/` (see Testing above) — extend an existing `tests/*.test.js` file if the change fits an existing area, add a new one following the same pattern otherwise. Don't push if `npm test` or `npm run lint` is failing; fix it (or the code) first — the CI pipeline enforces the same two checks (plus `npm audit`/gitleaks) server-side, so catching it locally first just saves a round-trip.

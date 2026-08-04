@@ -43,7 +43,7 @@ function createClient(baseUrl) {
     if (sidCookie) cookie = sidCookie.split(';')[0];
 
     let json = null;
-    try { json = await res.json(); } catch {}
+    try { json = await res.json(); } catch { /* resposta sem corpo JSON */ }
 
     return { status: res.status, body: json };
   }
@@ -81,9 +81,9 @@ async function getUserByEmail(email) {
 // apagar um arquivo aberto é uma operação POSIX válida. Cosmético — cada arquivo é pequeno e fica
 // isolado no diretório temp do SO, não no repositório.
 async function cleanupDbFile() {
-  try { await db.close(); } catch {}
+  try { await db.close(); } catch { /* já fechado ou nunca chegou a abrir */ }
   for (const suffix of ['', '-wal', '-shm']) {
-    try { fs.unlinkSync(dbFile + suffix); } catch {}
+    try { fs.unlinkSync(dbFile + suffix); } catch { /* ver comentário acima sobre EBUSY no Windows */ }
   }
 }
 

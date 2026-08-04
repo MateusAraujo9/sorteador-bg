@@ -17,7 +17,7 @@ Cadastre sua coleção de jogos de tabuleiro e deixe a sorte escolher o próximo
 - **Autenticação**: sessão por cookie `httpOnly` (sem `express-session`), senhas com hash `scrypt` nativo do Node (sem `bcrypt`)
 - **Frontend**: HTML/CSS/JS puro, sem framework ou bundler — ES modules nativos no navegador
 
-Sem build step, sem testes automatizados.
+Sem build step. Suíte de testes (`node:test`) e lint (`eslint`) rodam localmente (`npm test`, `npm run lint`) e no CI a cada PR — veja `CLAUDE.md`.
 
 ## Como rodar
 
