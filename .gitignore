@@ -7,3 +7,6 @@ Thumbs.db
 
 # credenciais locais (token da Turso etc.)
 .env
+
+# backlog de ideias, não é pra ir pro repositório
+/FEATURE_IDEAS.md
