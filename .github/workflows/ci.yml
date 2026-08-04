@@ -34,6 +34,9 @@ jobs:
   security:
     name: Segurança
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # gitleaks-action precisa listar os commits da PR para escanear o diff
     steps:
       - uses: actions/checkout@v4
         with:
