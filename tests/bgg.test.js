@@ -109,6 +109,20 @@ test('GET /api/bgg/search retorna 400 sem termo de busca', async () => {
   assert.equal(res.status, 400);
 });
 
+test('GET /api/bgg/search retorna 503 quando BGG_API_TOKEN não está configurado', async () => {
+  const client = server.client();
+  await registerAndVerify(client);
+
+  const original = process.env.BGG_API_TOKEN;
+  delete process.env.BGG_API_TOKEN;
+  try {
+    const res = await client.get('/api/bgg/search?q=catan');
+    assert.equal(res.status, 503);
+  } finally {
+    process.env.BGG_API_TOKEN = original;
+  }
+});
+
 test('GET /api/bgg/search retorna os resultados do client (mockado)', async t => {
   const client = server.client();
   await registerAndVerify(client);

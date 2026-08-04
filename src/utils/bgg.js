@@ -54,8 +54,18 @@ function parseThingXml(xml) {
 }
 
 async function fetchBgg(path) {
+  if (!process.env.BGG_API_TOKEN) {
+    throw new Error(
+      'BGG_API_TOKEN não configurado — a BGG passou a exigir um token de aplicação para usar a API XML ' +
+      '(registre-se em https://boardgamegeek.com/applications/create e preencha BGG_API_TOKEN no .env).'
+    );
+  }
+
   const response = await fetch(`${BGG_API_URL}${path}`, {
-    headers: { 'User-Agent': USER_AGENT },
+    headers: {
+      'User-Agent': USER_AGENT,
+      Authorization: `Bearer ${process.env.BGG_API_TOKEN}`
+    },
     signal: AbortSignal.timeout(10000)
   });
 
