@@ -1052,6 +1052,10 @@ input:focus-visible {
   overflow-y: auto;
 }
 
+.bgg-search__results[hidden] {
+  display: none;
+}
+
 .bgg-search__empty {
   font-size: 0.85rem;
   color: var(--ink-faint);
