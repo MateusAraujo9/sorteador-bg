@@ -1,6 +1,6 @@
 import { api } from './api.js';
 import { showToast } from './toast.js';
-import { renderGameList, renderStats, renderTicket, renderLinksList, renderAdminUsers, escapeHtml } from './render.js';
+import { renderGameList, renderStats, renderTicket, renderLinksList, renderAdminUsers, renderBggResults, escapeHtml } from './render.js';
 import { rollDie } from './dice.js';
 import { confirmDialog } from './confirmDialog.js';
 
@@ -230,6 +230,42 @@ function updateImagePreview(url) {
   }
   img.src = url;
   preview.hidden = false;
+}
+
+async function handleBggSearch() {
+  const input = document.getElementById('bggSearchInput');
+  const query = input.value.trim();
+  const resultsContainer = document.getElementById('bggSearchResults');
+  if (!query) return;
+
+  try {
+    const results = await api.bgg.search(query);
+    resultsContainer.hidden = false;
+    renderBggResults(resultsContainer, results, handleBggSelect);
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível buscar no BoardGameGeek.', 'error');
+  }
+}
+
+async function handleBggSelect(id) {
+  try {
+    const details = await api.bgg.getDetails(id);
+    const form = document.getElementById('registerForm');
+    form.name.value = details.name || '';
+    form.minPlayers.value = details.minPlayers || '';
+    form.maxPlayers.value = details.maxPlayers || '';
+    form.duration.value = details.duration || '';
+    form.category.value = details.category || '';
+    form.imageUrl.value = details.imageUrl || '';
+    form.minAge.value = details.minAge || '';
+    updateImagePreview(details.imageUrl || '');
+
+    document.getElementById('bggSearchResults').hidden = true;
+    document.getElementById('bggSearchInput').value = '';
+    showToast(`Dados de "${details.name}" preenchidos. Confira antes de salvar.`, 'success');
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível carregar os dados do jogo.', 'error');
+  }
 }
 
 function enterEditMode(game) {
@@ -549,6 +585,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
   document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+  document.getElementById('bggSearchBtn').addEventListener('click', handleBggSearch);
+  document.getElementById('bggSearchInput').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleBggSearch();
+    }
+  });
   document.getElementById('imageUrl').addEventListener('input', e => updateImagePreview(e.target.value.trim()));
   document.getElementById('imagePreviewImg').addEventListener('error', () => {
     document.getElementById('imagePreview').hidden = true;
