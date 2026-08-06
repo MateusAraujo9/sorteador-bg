@@ -1258,6 +1258,10 @@ input:focus-visible {
 
 /* ---------- responsive ---------- */
 @media (max-width: 600px) {
+  .panel {
+    padding: var(--space-5) var(--space-4);
+  }
+
   .field-row {
     grid-template-columns: 1fr;
   }
@@ -1284,8 +1288,44 @@ input:focus-visible {
     flex-basis: 100%;
   }
 
+  .collection-filters__field--checkbox {
+    justify-content: flex-start;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .form-actions .btn-primary {
+    width: 100%;
+  }
+
+  .form-actions .btn-link {
+    text-align: center;
+  }
+
+  .admin-user-row {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+
+  .admin-user-row__stat {
+    margin-left: auto;
+  }
+
   .ticket__title {
     font-size: 1.4rem;
+  }
+
+  .ticket__body {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
   }
 }
 

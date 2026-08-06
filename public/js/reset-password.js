@@ -1,6 +1,12 @@
 import { api } from './api.js';
 import { showToast } from './toast.js';
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 const token = new URLSearchParams(window.location.search).get('token');
 
 async function handleSubmit(event) {
