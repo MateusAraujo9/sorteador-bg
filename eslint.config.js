@@ -30,6 +30,13 @@ const browserGlobals = {
   HTMLElement: 'readonly'
 };
 
+const serviceWorkerGlobals = {
+  self: 'readonly',
+  caches: 'readonly',
+  fetch: 'readonly',
+  URL: 'readonly'
+};
+
 module.exports = [
   { ignores: ['node_modules/**', 'data/**'] },
   js.configs.recommended,
@@ -49,6 +56,15 @@ module.exports = [
       sourceType: 'module',
       ecmaVersion: 2022,
       globals: browserGlobals
+    }
+  },
+  {
+    // sw.js roda no contexto de Service Worker (self/caches), não de página (window/document)
+    files: ['public/sw.js'],
+    languageOptions: {
+      sourceType: 'script',
+      ecmaVersion: 2022,
+      globals: serviceWorkerGlobals
     }
   },
   {

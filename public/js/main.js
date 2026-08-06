@@ -4,6 +4,12 @@ import { renderGameList, renderStats, renderTicket, renderLinksList, renderAdmin
 import { rollDie } from './dice.js';
 import { confirmDialog } from './confirmDialog.js';
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 let currentUser = null;
 let editingGameId = null;
 let currentLinks = [];
