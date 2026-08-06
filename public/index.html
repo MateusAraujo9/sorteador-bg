@@ -261,6 +261,33 @@
           <button class="btn btn-primary btn-large" id="drawTrigger" type="button">Rolar os dados</button>
           <div id="resultTicket" class="ticket" hidden></div>
         </div>
+
+        <div id="matchStage" class="match-stage" hidden>
+          <h2 class="match-stage__title" id="matchGameName"></h2>
+
+          <div class="match-timer">
+            <span class="match-timer__display" id="matchTimerDisplay">00:00</span>
+            <button class="icon-btn icon-btn--large" type="button" id="matchPauseToggle" aria-label="Pausar cronômetro"></button>
+          </div>
+
+          <div class="match-manual" id="matchManual"></div>
+
+          <div class="match-participants">
+            <h3>Participantes</h3>
+            <form id="addParticipantForm" class="match-participants__form">
+              <input type="text" id="participantNameInput" placeholder="Nome do participante" required>
+              <button type="submit" class="btn btn-secondary">Adicionar</button>
+            </form>
+            <div id="participantList" class="participant-list"></div>
+          </div>
+
+          <div class="match-actions">
+            <button class="btn btn-primary" type="button" id="finishMatchBtn">Finalizar partida</button>
+            <button class="btn-link" type="button" id="cancelMatchBtn">Cancelar partida</button>
+          </div>
+
+          <div id="matchResult" class="match-result" hidden></div>
+        </div>
       </section>
 
       <!-- Perfil -->

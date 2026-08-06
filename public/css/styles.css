@@ -1007,6 +1007,11 @@ input:focus-visible {
   height: 15px;
 }
 
+.ticket__action {
+  margin-top: var(--space-5);
+  text-align: center;
+}
+
 /* ---------- bgg search ---------- */
 .bgg-search {
   margin-bottom: var(--space-5);
@@ -1261,6 +1266,210 @@ input:focus-visible {
   gap: var(--space-3);
 }
 
+/* ---------- partida em andamento ---------- */
+.draw-stage.has-match .draw-filters,
+.draw-stage.has-match .draw-filters__clear,
+.draw-stage.has-match .dice-stage,
+.draw-stage.has-match .draw-hint,
+.draw-stage.has-match #drawTrigger,
+.draw-stage.has-match #resultTicket {
+  display: none;
+}
+
+.match-stage {
+  margin-top: var(--space-5);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+  text-align: left;
+}
+
+.match-stage__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  margin: 0 0 var(--space-4);
+  text-align: center;
+}
+
+.match-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.match-timer__display {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 3.5ch;
+  text-align: center;
+}
+
+.icon-btn--large {
+  width: 48px;
+  height: 48px;
+  background: var(--ember);
+  color: var(--card);
+}
+
+.icon-btn--large svg {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-btn--large:hover {
+  background: var(--ember-dark);
+}
+
+.match-manual {
+  margin-bottom: var(--space-5);
+}
+
+.match-manual__empty {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.match-participants h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-3);
+}
+
+.match-participants__form {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.match-participants__form input {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--card-soft);
+  border: 1px solid rgba(36, 27, 18, 0.14);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.match-participants__form input:focus-visible {
+  border-color: var(--ember);
+  background: #fff;
+  outline: none;
+}
+
+.participant-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.participant-list__empty {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0 0 var(--space-5);
+}
+
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  background: var(--card-soft);
+  border-radius: var(--radius-sm);
+}
+
+.participant-row--winner {
+  background: rgba(227, 167, 46, 0.18);
+  border: 1px solid var(--gold);
+}
+
+.participant-row__winner-mark {
+  color: var(--gold);
+  display: inline-flex;
+}
+
+.participant-row__winner-mark svg {
+  width: 18px;
+  height: 18px;
+}
+
+.participant-row__name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.92rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.participant-row__score-input {
+  width: 72px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid rgba(36, 27, 18, 0.14);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--ink);
+  text-align: right;
+}
+
+.participant-row__score-input:focus-visible {
+  border-color: var(--ember);
+  outline: none;
+}
+
+.participant-row__score {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.match-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.match-stage--finished .match-participants,
+.match-stage--finished .match-actions,
+.match-stage--finished #matchPauseToggle {
+  display: none;
+}
+
+.match-result {
+  margin-top: var(--space-5);
+  text-align: center;
+}
+
+.match-result__heading {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.match-result__duration {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-4);
+}
+
+.match-result .participant-list {
+  text-align: left;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 600px) {
   .panel {
@@ -1336,6 +1545,24 @@ input:focus-visible {
   .icon-btn {
     width: 40px;
     height: 40px;
+  }
+
+  .match-stage {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .participant-row {
+    flex-wrap: wrap;
+  }
+
+  .participant-row__name {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+
+  .match-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
 }
 

@@ -89,6 +89,32 @@ async function runMigrations() {
       attempts INTEGER NOT NULL DEFAULT 0
     )
   `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS matches (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      boardgameId TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'in_progress',
+      startedAt TEXT NOT NULL,
+      runningSince TEXT,
+      elapsedMs INTEGER NOT NULL DEFAULT 0,
+      endedAt TEXT,
+      winnerParticipantId TEXT,
+      isTie INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS match_participants (
+      id TEXT PRIMARY KEY,
+      matchId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      score INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL
+    )
+  `);
 }
 
 module.exports = runMigrations;

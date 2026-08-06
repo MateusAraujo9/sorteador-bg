@@ -1,8 +1,12 @@
 import { api } from './api.js';
 import { showToast } from './toast.js';
-import { renderGameList, renderStats, renderTicket, renderLinksList, renderAdminUsers, renderBggResults, escapeHtml } from './render.js';
+import {
+  renderGameList, renderStats, renderTicket, renderLinksList, renderAdminUsers, renderBggResults, escapeHtml,
+  renderParticipantList, renderMatchHeader, renderMatchResult, formatElapsed
+} from './render.js';
 import { rollDie } from './dice.js';
 import { confirmDialog } from './confirmDialog.js';
+import { icons } from './icons.js';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -17,6 +21,8 @@ let originalLinkIds = [];
 let allGames = [];
 let pendingVerificationEmail = null;
 let verifySource = null;
+let activeMatch = null;
+let matchTickInterval = null;
 
 function handleAuthError(err) {
   if (err && err.status === 401) {
@@ -84,7 +90,10 @@ function switchTab(tab) {
   document.querySelector(`[data-tab="${tab}"]`).classList.add('is-active');
 
   if (tab === 'list') loadGames();
-  if (tab === 'draw') populateCategoryFilter();
+  if (tab === 'draw') {
+    populateCategoryFilter();
+    loadActiveMatch();
+  }
   if (tab === 'profile' && currentUser) fillProfileForm(currentUser);
   if (tab === 'admin') loadAdminUsers();
 }
@@ -435,6 +444,205 @@ async function handleDraw() {
   stage.classList.add('has-result');
 }
 
+function stopMatchTick() {
+  if (matchTickInterval) {
+    clearInterval(matchTickInterval);
+    matchTickInterval = null;
+  }
+}
+
+function currentElapsedMs() {
+  if (!activeMatch) return 0;
+  if (!activeMatch.runningSince) return activeMatch.elapsedMs;
+  return activeMatch.elapsedMs + (Date.now() - new Date(activeMatch.runningSince).getTime());
+}
+
+function updateTimerDisplay() {
+  document.getElementById('matchTimerDisplay').textContent = formatElapsed(currentElapsedMs());
+}
+
+function refreshTimer() {
+  stopMatchTick();
+  updateTimerDisplay();
+  if (activeMatch && activeMatch.runningSince) {
+    matchTickInterval = setInterval(updateTimerDisplay, 1000);
+  }
+}
+
+function updatePauseToggle() {
+  const btn = document.getElementById('matchPauseToggle');
+  const isRunning = Boolean(activeMatch && activeMatch.runningSince);
+  btn.innerHTML = isRunning ? icons.pause : icons.play;
+  btn.setAttribute('aria-label', isRunning ? 'Pausar cronômetro' : 'Retomar cronômetro');
+}
+
+function rerenderParticipants() {
+  renderParticipantList(document.getElementById('participantList'), activeMatch.participants, {
+    onScoreChange: handleScoreChange,
+    onRemove: handleRemoveParticipant
+  });
+}
+
+function enterMatchStage(match) {
+  activeMatch = match;
+  document.getElementById('drawStage').classList.add('has-match');
+  document.getElementById('matchStage').hidden = false;
+  document.getElementById('matchStage').classList.remove('match-stage--finished');
+  document.getElementById('matchResult').hidden = true;
+  renderMatchHeader(match);
+  rerenderParticipants();
+  updatePauseToggle();
+  refreshTimer();
+}
+
+function hideMatchStage() {
+  activeMatch = null;
+  stopMatchTick();
+  document.getElementById('drawStage').classList.remove('has-match');
+  document.getElementById('matchStage').hidden = true;
+  document.getElementById('matchStage').classList.remove('match-stage--finished');
+}
+
+function resetDrawStage() {
+  hideMatchStage();
+  document.getElementById('drawStage').classList.remove('has-result');
+  document.getElementById('resultTicket').hidden = true;
+  document.getElementById('drawTrigger').textContent = 'Rolar os dados';
+}
+
+async function loadActiveMatch() {
+  try {
+    const match = await api.matches.getActive();
+    document.getElementById('drawStage').classList.remove('has-result');
+    enterMatchStage(match);
+  } catch (err) {
+    if (err.status === 404) {
+      hideMatchStage();
+    } else if (!handleAuthError(err)) {
+      showToast('Não foi possível carregar a partida em andamento.', 'error');
+    }
+  }
+}
+
+async function handleStartMatch(boardgameId) {
+  try {
+    const match = await api.matches.start(boardgameId);
+    document.getElementById('drawStage').classList.remove('has-result');
+    enterMatchStage(match);
+  } catch (err) {
+    if (err.status === 409) {
+      showToast('Você já tem uma partida em andamento.', 'error');
+      loadActiveMatch();
+    } else if (!handleAuthError(err)) {
+      showToast(err.message || 'Não foi possível iniciar a partida.', 'error');
+    }
+  }
+}
+
+async function handleAddParticipant(event) {
+  event.preventDefault();
+  const input = document.getElementById('participantNameInput');
+  const name = input.value.trim();
+  if (!name) return;
+
+  try {
+    const participant = await api.matches.addParticipant(activeMatch.id, name);
+    activeMatch.participants.push(participant);
+    rerenderParticipants();
+    input.value = '';
+    input.focus();
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível adicionar o participante.', 'error');
+  }
+}
+
+async function handleRemoveParticipant(participantId) {
+  try {
+    await api.matches.removeParticipant(activeMatch.id, participantId);
+    activeMatch.participants = activeMatch.participants.filter(p => p.id !== participantId);
+    rerenderParticipants();
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível remover o participante.', 'error');
+  }
+}
+
+async function handleScoreChange(participantId, rawValue) {
+  const score = Number(rawValue);
+  if (rawValue.trim() === '' || !Number.isInteger(score)) {
+    showToast('Informe um número inteiro para o placar.', 'error');
+    rerenderParticipants();
+    return;
+  }
+
+  try {
+    await api.matches.updateScore(activeMatch.id, participantId, score);
+    const participant = activeMatch.participants.find(p => p.id === participantId);
+    if (participant) participant.score = score;
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível atualizar o placar.', 'error');
+    rerenderParticipants();
+  }
+}
+
+async function handleTogglePause() {
+  if (!activeMatch) return;
+  try {
+    const isRunning = Boolean(activeMatch.runningSince);
+    const result = isRunning ? await api.matches.pause(activeMatch.id) : await api.matches.resume(activeMatch.id);
+    activeMatch.elapsedMs = result.elapsedMs;
+    activeMatch.runningSince = result.runningSince;
+    updatePauseToggle();
+    refreshTimer();
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível atualizar o cronômetro.', 'error');
+  }
+}
+
+async function handleFinishMatch() {
+  if (!activeMatch) return;
+
+  const confirmed = await confirmDialog({
+    title: 'Finalizar partida',
+    message: activeMatch.participants.length === 0
+      ? 'Finalizar sem nenhum participante? A partida será encerrada sem vencedor.'
+      : 'Encerrar a partida e apurar o vencedor pelo placar atual?',
+    confirmLabel: 'Finalizar',
+    cancelLabel: 'Cancelar'
+  });
+  if (!confirmed) return;
+
+  try {
+    const finished = await api.matches.finish(activeMatch.id);
+    activeMatch = finished;
+    stopMatchTick();
+    document.getElementById('matchTimerDisplay').textContent = formatElapsed(finished.elapsedMs);
+    document.getElementById('matchStage').classList.add('match-stage--finished');
+    renderMatchResult(document.getElementById('matchResult'), finished);
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível finalizar a partida.', 'error');
+  }
+}
+
+async function handleCancelMatch() {
+  if (!activeMatch) return;
+
+  const confirmed = await confirmDialog({
+    title: 'Cancelar partida',
+    message: 'A partida em andamento será perdida, incluindo o cronômetro e o placar. Cancelar mesmo assim?',
+    confirmLabel: 'Cancelar partida',
+    cancelLabel: 'Voltar'
+  });
+  if (!confirmed) return;
+
+  try {
+    await api.matches.cancel(activeMatch.id);
+    resetDrawStage();
+    showToast('Partida cancelada.', 'success');
+  } catch (err) {
+    if (!handleAuthError(err)) showToast(err.message || 'Não foi possível cancelar a partida.', 'error');
+  }
+}
+
 async function handleLogin(event) {
   event.preventDefault();
   const form = event.target;
@@ -625,6 +833,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('clearListFiltersBtn').addEventListener('click', clearListFilters);
   document.getElementById('clearDrawFiltersBtn').addEventListener('click', clearDrawFilters);
+
+  document.getElementById('resultTicket').addEventListener('click', event => {
+    const btn = event.target.closest('[data-start-match]');
+    if (btn) handleStartMatch(btn.dataset.boardgameId);
+  });
+  document.getElementById('addParticipantForm').addEventListener('submit', handleAddParticipant);
+  document.getElementById('matchPauseToggle').addEventListener('click', handleTogglePause);
+  document.getElementById('finishMatchBtn').addEventListener('click', handleFinishMatch);
+  document.getElementById('cancelMatchBtn').addEventListener('click', handleCancelMatch);
+  document.getElementById('matchResult').addEventListener('click', event => {
+    if (event.target.closest('#newDrawBtn')) {
+      document.getElementById('matchStage').classList.remove('match-stage--finished');
+      resetDrawStage();
+    }
+  });
 
   try {
     const user = await api.auth.me();

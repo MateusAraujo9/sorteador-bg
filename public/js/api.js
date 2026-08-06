@@ -70,5 +70,17 @@ export const api = {
   bgg: {
     search: query => request(`/bgg/search?q=${encodeURIComponent(query)}`),
     getDetails: id => request(`/bgg/${id}`)
+  },
+
+  matches: {
+    getActive: () => request('/matches/active'),
+    start: boardgameId => request('/matches', { method: 'POST', ...jsonBody({ boardgameId }) }),
+    addParticipant: (matchId, name) => request(`/matches/${matchId}/participants`, { method: 'POST', ...jsonBody({ name }) }),
+    removeParticipant: (matchId, participantId) => request(`/matches/${matchId}/participants/${participantId}`, { method: 'DELETE' }),
+    updateScore: (matchId, participantId, score) => request(`/matches/${matchId}/participants/${participantId}`, { method: 'PATCH', ...jsonBody({ score }) }),
+    pause: matchId => request(`/matches/${matchId}/pause`, { method: 'POST' }),
+    resume: matchId => request(`/matches/${matchId}/resume`, { method: 'POST' }),
+    finish: matchId => request(`/matches/${matchId}/finish`, { method: 'POST' }),
+    cancel: matchId => request(`/matches/${matchId}`, { method: 'DELETE' })
   }
 };
