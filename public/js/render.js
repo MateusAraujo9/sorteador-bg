@@ -68,8 +68,10 @@ function docChip(link) {
     </a>`;
 }
 
-function gameLinksMarkup(game) {
-  if (!game.links || game.links.length === 0) return '';
+function gameLinksMarkup(game, emptyMessage = '') {
+  if (!game.links || game.links.length === 0) {
+    return emptyMessage ? `<p class="match-manual__empty">${escapeHtml(emptyMessage)}</p>` : '';
+  }
   return `<div class="doc-chips">${game.links.map(docChip).join('')}</div>`;
 }
 
@@ -125,7 +127,81 @@ export function renderTicket(container, game) {
       <h3 class="ticket__title">${escapeHtml(game.name)}</h3>
       <div class="ticket__details">${gameStatsMarkup(game)}</div>
       ${gameLinksMarkup(game)}
+      <div class="ticket__action">
+        <button class="btn btn-primary" type="button" data-start-match data-boardgame-id="${escapeHtml(String(game.id))}">Iniciar partida</button>
+      </div>
     </div>`;
+
+  container.hidden = false;
+}
+
+function participantRowTemplate(participant, { winnerParticipantId, readOnly } = {}) {
+  const isWinner = participant.id === winnerParticipantId;
+  return `
+    <div class="participant-row${isWinner ? ' participant-row--winner' : ''}">
+      ${isWinner ? `<span class="participant-row__winner-mark">${icons.trophy}</span>` : ''}
+      <span class="participant-row__name">${escapeHtml(participant.name)}</span>
+      ${readOnly
+        ? `<span class="participant-row__score">${participant.score}</span>`
+        : `<input type="number" class="participant-row__score-input" data-participant-id="${participant.id}" value="${participant.score}" step="1">
+           <button class="icon-btn icon-btn--danger" type="button" data-remove-participant="${participant.id}" aria-label="Remover ${escapeHtml(participant.name)}">${icons.trash}</button>`}
+    </div>`;
+}
+
+export function renderParticipantList(container, participants, { onScoreChange, onRemove }) {
+  if (participants.length === 0) {
+    container.innerHTML = '<p class="participant-list__empty">Nenhum participante ainda. Adicione quem vai jogar.</p>';
+    return;
+  }
+
+  container.innerHTML = participants.map(p => participantRowTemplate(p)).join('');
+
+  container.querySelectorAll('[data-participant-id]').forEach(input => {
+    input.addEventListener('change', () => onScoreChange(input.dataset.participantId, input.value));
+  });
+
+  container.querySelectorAll('[data-remove-participant]').forEach(btn => {
+    btn.addEventListener('click', () => onRemove(btn.dataset.removeParticipant));
+  });
+}
+
+export function formatElapsed(elapsedMs) {
+  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+export function renderMatchHeader(match) {
+  document.getElementById('matchGameName').textContent = match.boardgame ? match.boardgame.name : 'Partida em andamento';
+  document.getElementById('matchManual').innerHTML = match.boardgame
+    ? gameLinksMarkup(match.boardgame, 'Nenhum documento cadastrado para este jogo.')
+    : '';
+}
+
+export function renderMatchResult(container, match) {
+  const participants = match.participants || [];
+  let heading;
+  if (participants.length === 0) {
+    heading = 'Partida encerrada.';
+  } else if (match.isTie) {
+    const topScore = Math.max(...participants.map(p => p.score));
+    const tied = participants.filter(p => p.score === topScore).map(p => escapeHtml(p.name)).join(', ');
+    heading = `Empate entre ${tied} (${topScore} pts)`;
+  } else {
+    const winner = participants.find(p => p.id === match.winnerParticipantId);
+    heading = winner ? `${icons.trophy} Vencedor: ${escapeHtml(winner.name)} (${winner.score} pts)` : 'Partida encerrada.';
+  }
+
+  container.innerHTML = `
+    <p class="match-result__heading">${heading}</p>
+    <p class="match-result__duration">Duração: ${formatElapsed(match.elapsedMs)}</p>
+    ${participants.length > 0 ? `<div class="participant-list participant-list--final">${participants
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .map(p => participantRowTemplate(p, { winnerParticipantId: match.winnerParticipantId, readOnly: true }))
+      .join('')}</div>` : ''}
+    <button class="btn btn-primary" type="button" id="newDrawBtn">Nova rolagem</button>`;
 
   container.hidden = false;
 }

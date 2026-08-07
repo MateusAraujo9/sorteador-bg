@@ -17,5 +17,11 @@ export const icons = {
 
   document: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M7 3.5h7l4 4V20a.6.6 0 01-.6.6H7a.6.6 0 01-.6-.6V4.1a.6.6 0 01.6-.6z" ${stroke}/><path d="M14 3.5V8h4" ${stroke}/><path d="M9 12.5h6M9 16h6" ${stroke}/></svg>`,
 
-  restore: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4v6h6" ${stroke}/><path d="M5.2 15A8 8 0 1012 4a8 8 0 00-6.8 3.8" ${stroke}/></svg>`
+  restore: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4v6h6" ${stroke}/><path d="M5.2 15A8 8 0 1012 4a8 8 0 00-6.8 3.8" ${stroke}/></svg>`,
+
+  play: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M7.5 5.2v13.6a1 1 0 001.5.9l10.5-6.8a1 1 0 000-1.7L9 4.3a1 1 0 00-1.5.9z" fill="currentColor"/></svg>`,
+
+  pause: `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>`,
+
+  trophy: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M7 4.5h10v4.5a5 5 0 01-10 0V4.5z" ${stroke}/><path d="M7 6H4a3 3 0 003 3.5M17 6h3a3 3 0 01-3 3.5" ${stroke}/><path d="M12 14v3.2M9 20.5h6M9.5 20.5c0-1.8.9-2.8 2.5-3.3 1.6.5 2.5 1.5 2.5 3.3" ${stroke}/></svg>`
 };

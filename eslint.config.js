@@ -27,6 +27,8 @@ const browserGlobals = {
   AbortSignal: 'readonly',
   URLSearchParams: 'readonly',
   setTimeout: 'readonly',
+  setInterval: 'readonly',
+  clearInterval: 'readonly',
   HTMLElement: 'readonly'
 };
 
