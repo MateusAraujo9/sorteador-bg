@@ -36,7 +36,7 @@ body {
 }
 
 .container {
-  max-width: 880px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: var(--space-5) var(--space-4) var(--space-8);
 }
@@ -91,7 +91,7 @@ input:focus-visible {
 .brand-text p {
   margin: 0;
   color: rgba(244, 236, 216, 0.62);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
 }
 
 .user-badge {
@@ -100,7 +100,7 @@ input:focus-visible {
   gap: var(--space-3);
   margin-left: auto;
   color: rgba(244, 236, 216, 0.75);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 .user-badge[hidden] {
@@ -117,7 +117,7 @@ input:focus-visible {
   border: none;
   background: none;
   color: var(--gold);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -154,14 +154,14 @@ input:focus-visible {
   padding: 10px 0;
   border-radius: var(--radius-pill);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--ink-soft);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .auth-toggle__btn.is-active {
-  background: var(--ember);
+  background: var(--ember-btn);
   color: var(--card);
 }
 
@@ -185,7 +185,7 @@ input:focus-visible {
 }
 
 .verify-hint {
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--ink-soft);
   line-height: 1.5;
   margin-bottom: var(--space-5);
@@ -193,7 +193,7 @@ input:focus-visible {
 
 .code-input {
   font-family: var(--font-mono);
-  font-size: 1.75rem;
+  font-size: var(--text-8xl);
   font-weight: 600;
   letter-spacing: 0.5em;
   text-indent: 0.5em;
@@ -216,7 +216,7 @@ input:focus-visible {
   border-bottom: 2px solid transparent;
   padding: var(--space-3) 0 var(--space-3);
   margin-bottom: -1px;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -266,7 +266,7 @@ input:focus-visible {
 .panel h2 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.4rem;
+  font-size: var(--text-6xl);
   margin: 0 0 var(--space-5);
   color: var(--ink);
 }
@@ -279,7 +279,7 @@ input:focus-visible {
 .field label {
   display: block;
   margin-bottom: var(--space-2);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink-soft);
 }
@@ -290,7 +290,7 @@ input:focus-visible {
   background: var(--card-soft);
   border: 1px solid rgba(36, 27, 18, 0.14);
   border-radius: var(--radius-sm);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--ink);
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -354,7 +354,7 @@ input:focus-visible {
 
 .links-empty {
   margin: 0 0 var(--space-3);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--ink-soft);
 }
 
@@ -378,12 +378,12 @@ input:focus-visible {
 
 .link-row__label {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--ink);
 }
 
 .link-row__url {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--ember-dark);
   text-decoration: none;
   white-space: nowrap;
@@ -404,7 +404,7 @@ input:focus-visible {
   background: var(--card-soft);
   border: 1px solid rgba(36, 27, 18, 0.14);
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--ink);
 }
 
@@ -430,7 +430,7 @@ input:focus-visible {
   color: var(--teal);
   border-radius: var(--radius-pill);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: var(--text-2xs);
   text-decoration: none;
 }
 
@@ -450,13 +450,13 @@ input:focus-visible {
   border: none;
   border-radius: var(--radius-pill);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .btn-primary {
-  background: var(--ember);
+  background: var(--ember-btn);
   color: var(--card);
 }
 
@@ -477,7 +477,7 @@ input:focus-visible {
   color: var(--ink);
   border: 1px solid rgba(36, 27, 18, 0.2);
   padding: 10px 20px;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 .btn-secondary:hover {
@@ -487,7 +487,7 @@ input:focus-visible {
 
 .btn-large {
   padding: 16px 40px;
-  font-size: 1.05rem;
+  font-size: var(--text-xl);
 }
 
 .icon-btn {
@@ -545,7 +545,7 @@ input:focus-visible {
 }
 
 .collection-filters__field label {
-  font-size: 0.7rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -559,7 +559,7 @@ input:focus-visible {
   border: 1px solid rgba(36, 27, 18, 0.14);
   background: var(--card-soft);
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 .collection-filters__field input::placeholder {
@@ -582,7 +582,7 @@ input:focus-visible {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--ink);
   cursor: pointer;
   white-space: nowrap;
@@ -612,14 +612,14 @@ input:focus-visible {
 
 .stat-tile .number {
   font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-size: var(--text-7xl);
   font-weight: 600;
   color: var(--ember-dark);
 }
 
 .stat-tile .label {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -629,6 +629,7 @@ input:focus-visible {
 /* ---------- game list / shelf ---------- */
 .game-list {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-3);
 }
 
@@ -697,7 +698,7 @@ input:focus-visible {
 
 .game-card__title {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: var(--text-xl);
   font-weight: 600;
   margin: 0 0 4px;
   color: var(--ink);
@@ -714,7 +715,7 @@ input:focus-visible {
   background: var(--ink-faint);
   color: var(--ink-soft);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -733,7 +734,7 @@ input:focus-visible {
   align-items: center;
   gap: 5px;
   font-family: var(--font-mono);
-  font-size: 0.76rem;
+  font-size: var(--text-xs);
   color: var(--ink-soft);
 }
 
@@ -768,13 +769,13 @@ input:focus-visible {
 
 .empty-state__title {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: var(--text-3xl);
   color: var(--ink);
   margin: 0 0 6px;
 }
 
 .empty-state__message {
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   margin: 0;
   max-width: 30ch;
   margin-inline: auto;
@@ -784,7 +785,7 @@ input:focus-visible {
 .draw-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.4rem;
+  font-size: var(--text-6xl);
   color: var(--card);
   text-align: center;
   margin: 0 0 var(--space-6);
@@ -817,7 +818,7 @@ input:focus-visible {
 }
 
 .draw-filters__field label {
-  font-size: 0.7rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -832,7 +833,7 @@ input:focus-visible {
   border: 1px solid rgba(244, 236, 216, 0.18);
   background: rgba(244, 236, 216, 0.08);
   color: var(--card);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .draw-filters__field input::placeholder {
@@ -906,7 +907,7 @@ input:focus-visible {
 .draw-hint {
   color: rgba(244, 236, 216, 0.62);
   margin: 0 0 var(--space-5);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
 }
 
 .draw-stage.has-result .draw-hint {
@@ -936,7 +937,7 @@ input:focus-visible {
   align-items: center;
   padding: var(--space-3) var(--space-5);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: var(--text-2xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -985,7 +986,7 @@ input:focus-visible {
 
 .ticket__title {
   font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-size: var(--text-7xl);
   font-weight: 600;
   margin: 0 0 var(--space-3);
   color: var(--ember-dark);
@@ -999,7 +1000,7 @@ input:focus-visible {
 }
 
 .ticket__details .stat-item {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .ticket__details svg {
@@ -1022,7 +1023,7 @@ input:focus-visible {
 .bgg-search label {
   display: block;
   margin-bottom: var(--space-2);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink-soft);
 }
@@ -1039,7 +1040,7 @@ input:focus-visible {
   background: var(--card-soft);
   border: 1px solid rgba(36, 27, 18, 0.14);
   border-radius: var(--radius-sm);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--ink);
 }
 
@@ -1067,7 +1068,7 @@ input:focus-visible {
 }
 
 .bgg-search__empty {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--ink-faint);
   padding: var(--space-2) 0;
 }
@@ -1083,7 +1084,7 @@ input:focus-visible {
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--ink);
   transition: background 0.15s ease;
 }
@@ -1094,7 +1095,7 @@ input:focus-visible {
 
 .bgg-result__year {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--ink-faint);
   flex-shrink: 0;
   margin-left: var(--space-3);
@@ -1103,7 +1104,7 @@ input:focus-visible {
 /* ---------- admin ---------- */
 .admin-hint {
   color: var(--ink-soft);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   margin-bottom: var(--space-5);
 }
 
@@ -1139,12 +1140,12 @@ input:focus-visible {
 .admin-user-row__you {
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--ink-soft);
 }
 
 .admin-user-row__email {
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   color: var(--ink-soft);
 }
 
@@ -1158,13 +1159,13 @@ input:focus-visible {
 }
 
 .admin-user-row__count {
-  font-size: 1.1rem;
+  font-size: var(--text-2xl);
   font-weight: 600;
   color: var(--ember);
 }
 
 .admin-user-row__count-label {
-  font-size: 0.65rem;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ink-faint);
@@ -1177,7 +1178,7 @@ input:focus-visible {
   border: 1px solid rgba(36, 27, 18, 0.14);
   background: var(--card);
   color: var(--ink);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
@@ -1195,7 +1196,7 @@ input:focus-visible {
   border-radius: var(--radius-sm);
   color: var(--card);
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   background: var(--ink);
   box-shadow: var(--shadow-card);
   z-index: 1000;
@@ -1248,14 +1249,14 @@ input:focus-visible {
 
 .modal__title {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: var(--text-5xl);
   color: var(--ink);
   margin-bottom: var(--space-3);
 }
 
 .modal__message {
   color: var(--ink-soft);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   line-height: 1.5;
   margin-bottom: var(--space-5);
 }
@@ -1289,7 +1290,7 @@ input:focus-visible {
 .match-stage__title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.4rem;
+  font-size: var(--text-6xl);
   margin: 0 0 var(--space-4);
   text-align: center;
 }
@@ -1304,7 +1305,7 @@ input:focus-visible {
 
 .match-timer__display {
   font-family: var(--font-mono);
-  font-size: 2.2rem;
+  font-size: var(--text-9xl);
   font-weight: 600;
   color: var(--ink);
   min-width: 3.5ch;
@@ -1332,14 +1333,14 @@ input:focus-visible {
 }
 
 .match-manual__empty {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--ink-soft);
   margin: 0;
 }
 
 .match-participants h3 {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: var(--text-2xl);
   margin: 0 0 var(--space-3);
 }
 
@@ -1355,7 +1356,7 @@ input:focus-visible {
   background: var(--card-soft);
   border: 1px solid rgba(36, 27, 18, 0.14);
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--ink);
 }
 
@@ -1372,7 +1373,7 @@ input:focus-visible {
 }
 
 .participant-list__empty {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--ink-soft);
   margin: 0 0 var(--space-5);
 }
@@ -1404,7 +1405,7 @@ input:focus-visible {
 .participant-row__name {
   flex: 1;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: var(--text-base);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1418,7 +1419,7 @@ input:focus-visible {
   border: 1px solid rgba(36, 27, 18, 0.14);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--ink);
   text-align: right;
 }
@@ -1431,7 +1432,7 @@ input:focus-visible {
 .participant-row__score {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--ink);
 }
 
@@ -1455,14 +1456,14 @@ input:focus-visible {
 
 .match-result__heading {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: var(--text-4xl);
   font-weight: 600;
   margin: 0 0 var(--space-2);
 }
 
 .match-result__duration {
   color: var(--ink-soft);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   margin: 0 0 var(--space-4);
 }
 
@@ -1486,6 +1487,10 @@ input:focus-visible {
   }
 
   .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .game-list {
     grid-template-columns: 1fr;
   }
 
@@ -1535,7 +1540,7 @@ input:focus-visible {
   }
 
   .ticket__title {
-    font-size: 1.4rem;
+    font-size: var(--text-6xl);
   }
 
   .ticket__body {

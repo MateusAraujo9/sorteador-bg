@@ -35,6 +35,26 @@ function handleAuthError(err) {
   return false;
 }
 
+// Disables a form's submit button and swaps its label while a request is in flight,
+// so a slow round-trip can't be double-submitted and gets visible feedback either way.
+// Reads the button's current label as "original" (not a hardcoded string) since some
+// submit buttons (registerSubmitBtn) already change label depending on create/edit mode.
+function setSubmitting(form, isSubmitting, submittingLabel = 'Enviando…') {
+  const button = form.querySelector('button[type="submit"]');
+  if (!button) return;
+  if (isSubmitting) {
+    button.dataset.originalLabel = button.textContent;
+    button.textContent = submittingLabel;
+    button.disabled = true;
+  } else {
+    button.disabled = false;
+    if (button.dataset.originalLabel) {
+      button.textContent = button.dataset.originalLabel;
+      delete button.dataset.originalLabel;
+    }
+  }
+}
+
 function showAuthView() {
   document.getElementById('appView').hidden = true;
   document.getElementById('authView').hidden = false;
@@ -388,15 +408,21 @@ async function handleRegisterSubmit(event) {
 
   const isEditing = Boolean(editingGameId);
 
+  setSubmitting(form, true, isEditing ? 'Salvando…' : 'Cadastrando…');
   try {
     const game = isEditing ? await api.update(editingGameId, payload) : await api.create(payload);
     await reconcileLinks(game.id);
+    // Restore before exitEditMode(), which sets its own authoritative label
+    // ("Cadastrar boardgame") — restoring after would clobber it back to
+    // whatever the button said pre-submit ("Salvar alterações" when editing).
+    setSubmitting(form, false);
     showToast(
       isEditing ? `"${payload.name}" foi atualizado.` : `"${payload.name}" entrou na coleção.`,
       'success'
     );
     exitEditMode();
   } catch (err) {
+    setSubmitting(form, false);
     if (!handleAuthError(err)) {
       showToast(err.message || 'Não foi possível salvar o jogo.', 'error');
     }
@@ -541,10 +567,12 @@ async function handleStartMatch(boardgameId) {
 
 async function handleAddParticipant(event) {
   event.preventDefault();
+  const form = event.target;
   const input = document.getElementById('participantNameInput');
   const name = input.value.trim();
   if (!name) return;
 
+  setSubmitting(form, true, 'Adicionando…');
   try {
     const participant = await api.matches.addParticipant(activeMatch.id, name);
     activeMatch.participants.push(participant);
@@ -553,6 +581,8 @@ async function handleAddParticipant(event) {
     input.focus();
   } catch (err) {
     if (!handleAuthError(err)) showToast(err.message || 'Não foi possível adicionar o participante.', 'error');
+  } finally {
+    setSubmitting(form, false);
   }
 }
 
@@ -647,6 +677,7 @@ async function handleLogin(event) {
   event.preventDefault();
   const form = event.target;
 
+  setSubmitting(form, true, 'Entrando…');
   try {
     const user = await api.auth.login({
       email: form.email.value.trim(),
@@ -662,6 +693,8 @@ async function handleLogin(event) {
       return;
     }
     showToast(err.message || 'Não foi possível entrar.', 'error');
+  } finally {
+    setSubmitting(form, false);
   }
 }
 
@@ -670,6 +703,7 @@ async function handleSignup(event) {
   const form = event.target;
   const email = form.email.value.trim();
 
+  setSubmitting(form, true, 'Criando conta…');
   try {
     await api.auth.register({
       name: form.name.value.trim(),
@@ -680,6 +714,8 @@ async function handleSignup(event) {
     showToast('Enviamos um código de verificação para o seu e-mail.', 'success');
   } catch (err) {
     showToast(err.message || 'Não foi possível criar a conta.', 'error');
+  } finally {
+    setSubmitting(form, false);
   }
 }
 
@@ -687,6 +723,7 @@ async function handleVerifyEmail(event) {
   event.preventDefault();
   const form = event.target;
 
+  setSubmitting(form, true, 'Confirmando…');
   try {
     const user = await api.auth.verifyEmail({
       email: pendingVerificationEmail,
@@ -700,6 +737,8 @@ async function handleVerifyEmail(event) {
     showAppView(user);
   } catch (err) {
     showToast(err.message || 'Não foi possível verificar o código.', 'error');
+  } finally {
+    setSubmitting(form, false);
   }
 }
 
@@ -722,6 +761,7 @@ async function handleForgotPassword(event) {
   event.preventDefault();
   const form = event.target;
 
+  setSubmitting(form, true, 'Enviando…');
   try {
     const { message } = await api.auth.forgotPassword({ email: form.email.value.trim() });
     showToast(message, 'success');
@@ -729,6 +769,8 @@ async function handleForgotPassword(event) {
     switchAuthMode('login');
   } catch (err) {
     showToast(err.message || 'Não foi possível enviar o e-mail.', 'error');
+  } finally {
+    setSubmitting(form, false);
   }
 }
 
@@ -765,6 +807,7 @@ async function handleProfileSubmit(event) {
     payload.newPassword = newPassword;
   }
 
+  setSubmitting(form, true, 'Salvando…');
   try {
     const user = await api.auth.updateProfile(payload);
     currentUser = user;
@@ -773,6 +816,8 @@ async function handleProfileSubmit(event) {
     showToast('Perfil atualizado com sucesso.', 'success');
   } catch (err) {
     if (!handleAuthError(err)) showToast(err.message || 'Não foi possível atualizar o perfil.', 'error');
+  } finally {
+    setSubmitting(form, false);
   }
 }
 
